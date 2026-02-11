@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>F1 Historical Archive</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body data-page="home">
+  <header>
+    <nav class="nav">
+      <div class="logo">F1 ARCHIVE</div>
+      <div class="nav-links">
+        <a href="/index.html">Home</a>
+        <a href="/seasons.html">Seasons</a>
+        <a href="/drivers.html">Drivers</a>
+        <a href="/teams.html">Teams</a>
+        <a href="/circuits.html">Circuits</a>
+        <a href="/races.html">Races</a>
+        <a href="/admin/index.html">Admin</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <div class="pill">Historical Archive</div>
+        <h1 id="featured-season">Loading season...</h1>
+        <p>
+          An IMDb-style archive of Formula 1 history. Every season, driver, constructor, circuit,
+          and race result is curated manually by administrators.
+        </p>
+        <div class="meta-list">
+          <div><span>Champion Driver</span><span id="featured-champion">—</span></div>
+          <div><span>Champion Team</span><span id="featured-team">—</span></div>
+          <div><span>Total Races</span><span id="featured-year">—</span></div>
+        </div>
+        <div style="margin-top: 16px; display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="button" href="/seasons.html">Explore Seasons</a>
+          <a class="button" href="/drivers.html">View Drivers</a>
+        </div>
+      </div>
+      <img id="featured-banner" alt="Featured Season" loading="lazy" />
+    </section>
+
+    <h2 class="section-title">Driver Spotlight</h2>
+    <section class="grid" id="driver-spotlight"></section>
+  </main>
+
+  <footer class="footer">
+    Formula 1 Historical Database. All data is curated manually via CMS. No live feeds or external APIs.
+  </footer>
+
+  <script src="/site.js"></script>
+</body>
+</html>

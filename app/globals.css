@@ -1,0 +1,81 @@
+/* Custom dark scrollbar for select */
+select::-webkit-scrollbar {
+  width: 8px;
+}
+select::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 8px;
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global variables */
+:root {
+}
+
+/* Body */
+
+body {
+  @apply min-h-screen text-white antialiased overflow-x-hidden w-full max-w-full;
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(255, 45, 60, 0.2), transparent 34%),
+    radial-gradient(circle at 82% 12%, rgba(22, 242, 255, 0.18), transparent 34%),
+    linear-gradient(160deg, #020308 0%, #060b18 46%, #020308 100%);
+  padding-bottom: 5rem;
+}
+
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.11;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.4) 1px, transparent 1px);
+  background-size: 3px 3px;
+  z-index: -1;
+}
+
+/* Glass Styles */
+
+.glass {
+  @apply border border-white/10 bg-white/5 backdrop-blur-md shadow-xl;
+}
+.glass-strong {
+  @apply border border-white/10 bg-white/[0.06] backdrop-blur-md shadow-xl;
+}
+
+/* Typography */
+
+.section-title {
+  @apply text-2xl font-bold uppercase tracking-[0.14em] md:text-4xl;
+}
+
+
+.label {
+  @apply text-xs uppercase tracking-[0.22em] text-gray-400;
+}
+
+/* Animations */
+.fade-in-up {
+  animation: fade-in-up 0.35s ease-out both;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Desktop Adjustment */
+@media (min-width: 768px) {
+  body {
+    padding-bottom: 0;
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "css.validate": false,
+  "tailwindCSS.experimental.classRegex": [
+    ["className=\"([^\"]*)\"", "([a-zA-Z0-9-:/ ]*)"]
+],
+"git.ignoreLimitWarning": true
+}

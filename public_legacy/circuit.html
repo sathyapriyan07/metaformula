@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Circuit Detail</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body data-page="circuit-detail">
+  <header>
+    <nav class="nav">
+      <div class="logo">F1 ARCHIVE</div>
+      <div class="nav-links">
+        <a href="/index.html">Home</a>
+        <a href="/circuits.html">Circuits</a>
+        <a href="/drivers.html">Drivers</a>
+        <a href="/teams.html">Teams</a>
+        <a href="/seasons.html">Seasons</a>
+        <a href="/races.html">Races</a>
+        <a href="/admin/index.html">Admin</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="detail-header">
+      <img id="circuit-layout" alt="Circuit layout" loading="lazy" />
+      <div>
+        <div class="badge">Circuit</div>
+        <h1 id="circuit-name">Circuit</h1>
+        <p class="label">Country: <span id="circuit-country">—</span></p>
+        <p class="label">Lap Length (km): <span id="circuit-length">—</span></p>
+        <p class="label">First GP: <span id="circuit-first">—</span></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">Circuit details and layout imagery.</footer>
+  <script src="/site.js"></script>
+</body>
+</html>
