@@ -38,17 +38,18 @@ export default async function RacesPage() {
                       <span>Laps</span>
                       <span className="font-semibold">{race.laps ?? "\u2014"}</span>
                     </div>
-                    <div className="flex justify-between">
+                    {/* <div className="flex justify-between">
                       <span>Date</span>
                       <span className="font-semibold">{race.date}</span>
-                    </div>
+                    </div> */}
                   </div>
                 </Card>
               </Link>
             );
-
           })}
         </div>
       </main>
       <Footer text="Every race result is curated manually." />
     </div>
+  );
+}

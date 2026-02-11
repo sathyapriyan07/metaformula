@@ -1,5 +1,6 @@
 import AdminHeader from "../../components/AdminHeader";
 import ModuleList from "../../components/ModuleList";
+import AdminOnly from "../../../../components/AdminOnly";
 import { listDriverStandings, listDrivers, listSeasons, listTeams } from "../../../../lib/queries";
 
 interface DriverStandingRow {

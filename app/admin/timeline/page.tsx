@@ -1,5 +1,6 @@
 import AdminHeader from "../components/AdminHeader";
 import ModuleList from "../components/ModuleList";
+import AdminOnly from "../../../components/AdminOnly";
 import { listTimelineEvents } from "../../../lib/queries";
 
 interface TimelineRow {
