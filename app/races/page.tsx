@@ -46,4 +46,9 @@ export default async function RacesPage() {
                 </Card>
               </Link>
             );
+
           })}
+        </div>
+      </main>
+      <Footer text="Every race result is curated manually." />
+    </div>
