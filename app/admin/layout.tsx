@@ -12,6 +12,7 @@ const links = [
   { href: "/admin/standings", label: "Standings" },
   { href: "/admin/timeline", label: "Timeline" },
   { href: "/admin/media", label: "Media" },
+  { href: "/admin/import", label: "Import" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

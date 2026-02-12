@@ -16,6 +16,7 @@ export default function AdminSignOut() {
     <button
       onClick={handleSignOut}
       className="rounded-full border border-white/20 px-4 py-2 text-xs uppercase tracking-[0.2em] text-f1-muted"
+      suppressHydrationWarning
     >
       Sign Out
     </button>
