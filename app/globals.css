@@ -1,71 +1,41 @@
-/* Custom dark scrollbar for select */
-select::-webkit-scrollbar {
-  width: 8px;
-}
-select::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.2);
-  border-radius: 8px;
-}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Global variables */
-:root {
-}
-
-/* Body */
-
+/* Apple TV Dark Theme */
 body {
-  @apply min-h-screen text-white antialiased overflow-x-hidden w-full max-w-full;
-  background-image:
-    radial-gradient(circle at 12% 8%, rgba(255, 45, 60, 0.2), transparent 34%),
-    radial-gradient(circle at 82% 12%, rgba(22, 242, 255, 0.18), transparent 34%),
-    linear-gradient(160deg, #020308 0%, #060b18 46%, #020308 100%);
+  @apply min-h-screen text-white antialiased overflow-x-hidden;
+  background: linear-gradient(180deg, #000000 0%, #0a0a0a 50%, #000000 100%);
   padding-bottom: 5rem;
 }
 
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.11;
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.4) 1px, transparent 1px);
-  background-size: 3px 3px;
-  z-index: -1;
-}
-
-/* Glass Styles */
-
+/* Glass morphism */
 .glass {
-  @apply border border-white/10 bg-white/5 backdrop-blur-md shadow-xl;
+  @apply backdrop-blur-md bg-white/[0.06] border border-white/10 shadow-glass;
 }
+
 .glass-strong {
-  @apply border border-white/10 bg-white/[0.06] backdrop-blur-md shadow-xl;
+  @apply backdrop-blur-md bg-white/[0.08] border border-white/10 shadow-glass;
 }
 
 /* Typography */
-
 .section-title {
-  @apply text-2xl font-bold uppercase tracking-[0.14em] md:text-4xl;
+  @apply text-3xl md:text-5xl font-bold tracking-tight;
 }
 
-
 .label {
-  @apply text-xs uppercase tracking-[0.22em] text-gray-400;
+  @apply text-xs uppercase tracking-widest text-white/50;
 }
 
 /* Animations */
 .fade-in-up {
-  animation: fade-in-up 0.35s ease-out both;
+  animation: fadeInUp 0.6s ease-out;
 }
 
-@keyframes fade-in-up {
+@keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -73,7 +43,30 @@ body::before {
   }
 }
 
-/* Desktop Adjustment */
+/* Smooth transitions */
+* {
+  @apply transition-all duration-300;
+}
+
+/* Scrollbar */
+select::-webkit-scrollbar,
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+select::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+
+select::-webkit-scrollbar-track,
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Desktop */
 @media (min-width: 768px) {
   body {
     padding-bottom: 0;

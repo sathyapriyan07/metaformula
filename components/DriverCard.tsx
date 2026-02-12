@@ -11,44 +11,44 @@ interface DriverCardProps {
 
 export default function DriverCard({ name, number, team, image_url, flag_url, team_color }: DriverCardProps) {
   return (
-    <article
-      className={`relative rounded-3xl overflow-hidden backdrop-blur-md bg-white/5 border border-white/10 p-6 text-center transition hover:scale-105 min-h-[260px] ${team_color}`}
-    >
+    <article className="group relative glass rounded-2xl overflow-hidden hover:scale-105 hover:shadow-glow-hover">
       {/* Number Badge */}
-      <span className="absolute top-4 right-4 text-3xl font-bold opacity-30 select-none pointer-events-none z-10">
+      <span className="absolute top-4 right-4 text-5xl font-bold text-white/10 z-10">
         {number}
       </span>
-      {/* Image */}
-      {image_url ? (
-        <div className="flex justify-center">
+      
+      {/* Driver Image */}
+      <div className="relative aspect-[3/4] bg-gradient-to-b from-white/5 to-transparent">
+        {image_url && (
           <Image
             src={image_url}
             alt={name}
-            width={176}
-            height={176}
-            className="mx-auto h-44 object-contain rounded-2xl mt-2"
+            fill
+            className="object-contain p-4"
             loading="lazy"
             unoptimized
           />
-        </div>
-      ) : null}
-      {/* Country label */}
-      {flag_url ? (
-        <div className="flex justify-center items-center gap-2 mt-4 mb-1">
-          <Image
-            src={flag_url}
-            alt={`${name} flag`}
-            width={24}
-            height={24}
-            className="h-5 w-5 object-cover rounded-full border border-white/20"
-            loading="lazy"
-            unoptimized
-          />
-          <p className="text-xs tracking-widest text-white/60">{team.toUpperCase()}</p>
-        </div>
-      ) : null}
-      {/* Name */}
-      <h3 className="mt-2 text-xl font-semibold text-white truncate">{name}</h3>
+        )}
+      </div>
+      
+      {/* Info */}
+      <div className="p-6 space-y-2">
+        {flag_url && (
+          <div className="flex items-center gap-2">
+            <Image
+              src={flag_url}
+              alt={`${name} flag`}
+              width={20}
+              height={20}
+              className="rounded-sm"
+              loading="lazy"
+              unoptimized
+            />
+            <p className="text-xs text-white/50">{team}</p>
+          </div>
+        )}
+        <h3 className="text-xl font-semibold truncate">{name}</h3>
+      </div>
     </article>
   );
 }

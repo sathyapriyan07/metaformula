@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 export default function AdminHeader({ title, description, actionHref, actionLabel }: {
   title: string;
@@ -7,15 +7,15 @@ export default function AdminHeader({ title, description, actionHref, actionLabe
   actionLabel: string;
 }) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-f1-surface/70 p-6 shadow-glass md:flex-row md:items-center md:justify-between">
+    <div className="glass rounded-2xl p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
       <div>
-        <div className="label">Admin Module</div>
-        <h1 className="font-display text-3xl tracking-[0.2em] text-white">{title}</h1>
-        <p className="mt-2 text-sm text-f1-muted">{description}</p>
+        <div className="text-xs text-white/50 mb-2">Admin Module</div>
+        <h1 className="text-3xl font-bold">{title}</h1>
+        <p className="mt-2 text-sm text-white/60">{description}</p>
       </div>
       <Link
         href={actionHref}
-        className="rounded-full border border-f1-cyan/40 px-5 py-2 text-xs uppercase tracking-[0.2em] text-f1-cyan transition hover:border-f1-red/50 hover:text-f1-red"
+        className="px-6 py-3 rounded-full bg-white/10 text-sm font-medium hover:bg-white/20 hover:scale-105 whitespace-nowrap"
       >
         {actionLabel}
       </Link>

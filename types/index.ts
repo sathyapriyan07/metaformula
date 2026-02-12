@@ -5,6 +5,7 @@ export interface Team {
   base_country?: string | null;
   championships: number | null;
   active_years?: string | null;
+  status?: "draft" | "published";
 }
 
 export interface Driver {
@@ -20,6 +21,7 @@ export interface Driver {
   fastest_laps: number | null;
   biography?: string | null;
   team_ids?: number[];
+  status?: "draft" | "published";
 }
 
 export interface Circuit {
@@ -29,6 +31,7 @@ export interface Circuit {
   track_layout_url?: string | null;
   lap_length_km?: number | null;
   first_gp_year?: number | null;
+  status?: "draft" | "published";
 }
 
 export interface Season {
@@ -38,6 +41,7 @@ export interface Season {
   champion_team_id?: number | null;
   total_races: number;
   banner_image_url?: string | null;
+  status?: "draft" | "published";
 }
 
 export interface Race {

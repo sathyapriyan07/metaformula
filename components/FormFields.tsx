@@ -1,4 +1,4 @@
-﻿import { UseFormRegister, FieldValues, Path, FieldError } from "react-hook-form";
+import { UseFormRegister, FieldValues, Path, FieldError } from "react-hook-form";
 import clsx from "clsx";
 
 interface FieldProps<T extends FieldValues> {
@@ -22,7 +22,7 @@ export function TextField<T extends FieldValues>({
 }: FieldProps<T>) {
   return (
     <div className="space-y-2">
-      <label className="text-xs uppercase tracking-wider text-white/60 mb-1 block" htmlFor={name}>{label}</label>
+      <label className="block text-sm font-medium text-white/80" htmlFor={name}>{label}</label>
       <input
         id={name}
         type={type}
@@ -30,11 +30,11 @@ export function TextField<T extends FieldValues>({
         step={step}
         {...register(name)}
         className={clsx(
-          "w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-white placeholder:text-white/40 backdrop-blur-md caret-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/60 transition-all",
-          error && "border-f1-red/60"
+          "w-full rounded-xl bg-black/60 border border-white/10 px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30",
+          error && "border-red-500/60"
         )}
       />
-      {error && <p className="text-xs text-f1-red">{error.message}</p>}
+      {error && <p className="text-xs text-red-400">{error.message}</p>}
     </div>
   );
 }
@@ -54,13 +54,13 @@ export function SelectField<T extends FieldValues>({
 }: FieldProps<T> & { options: SelectOption[]; placeholder?: string }) {
   return (
     <div className="space-y-2">
-      <label className="text-xs uppercase tracking-wider text-white/60 mb-1 block" htmlFor={name}>{label}</label>
+      <label className="block text-sm font-medium text-white/80" htmlFor={name}>{label}</label>
       <select
         id={name}
         {...register(name)}
         className={clsx(
-          "w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-white placeholder:text-white/40 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/60 transition-all appearance-none",
-          error && "border-f1-red/60"
+          "w-full rounded-xl bg-black/60 border border-white/10 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30",
+          error && "border-red-500/60"
         )}
       >
         <option value="">{placeholder ?? "Select"}</option>
@@ -70,7 +70,7 @@ export function SelectField<T extends FieldValues>({
           </option>
         ))}
       </select>
-      {error && <p className="text-xs text-f1-red">{error.message}</p>}
+      {error && <p className="text-xs text-red-400">{error.message}</p>}
     </div>
   );
 }
@@ -78,17 +78,17 @@ export function SelectField<T extends FieldValues>({
 export function TextAreaField<T extends FieldValues>({ label, name, register, error, placeholder }: FieldProps<T>) {
   return (
     <div className="space-y-2">
-      <label className="text-xs uppercase tracking-wider text-white/60 mb-1 block" htmlFor={name}>{label}</label>
+      <label className="block text-sm font-medium text-white/80" htmlFor={name}>{label}</label>
       <textarea
         id={name}
         placeholder={placeholder}
         {...register(name)}
         className={clsx(
-          "min-h-[160px] w-full rounded-2xl bg-black/40 border border-white/10 px-4 py-3 text-white placeholder:text-white/40 backdrop-blur-md caret-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/60 transition-all",
-          error && "border-f1-red/60"
+          "min-h-[160px] w-full rounded-xl bg-black/60 border border-white/10 px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30",
+          error && "border-red-500/60"
         )}
       />
-      {error && <p className="text-xs text-f1-red">{error.message}</p>}
+      {error && <p className="text-xs text-red-400">{error.message}</p>}
     </div>
   );
 }

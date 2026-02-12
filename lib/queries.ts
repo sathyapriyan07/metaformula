@@ -43,7 +43,7 @@ async function readWithFallback<T>(label: string, readFn: () => Promise<T>, fall
 
 export async function listTeams(): Promise<Team[]> {
   return readWithFallback("listTeams", async () => {
-    const result = await supabase.from("teams").select("*").order("team_name");
+    const result = await supabase.from("teams").select("*").or("status.eq.published,status.is.null").order("team_name");
     return ensureNoError(result) as Team[];
   }, []);
 }
@@ -72,7 +72,7 @@ export async function deleteTeam(id: number) {
 
 export async function listDrivers(): Promise<Driver[]> {
   return readWithFallback("listDrivers", async () => {
-    const driversResult = await supabase.from("drivers").select("*").order("name");
+    const driversResult = await supabase.from("drivers").select("*").or("status.eq.published,status.is.null").order("name");
     const drivers = ensureNoError(driversResult) as Driver[];
     const linksResult = await supabase.from("driver_teams").select("driver_id, team_id");
     const links = ensureNoError(linksResult) as { driver_id: number; team_id: number }[];
@@ -125,7 +125,7 @@ async function setDriverTeams(driverId: number, teamIds: number[]) {
 
 export async function listCircuits(): Promise<Circuit[]> {
   return readWithFallback("listCircuits", async () => {
-    const result = await supabase.from("circuits").select("*").order("circuit_name");
+    const result = await supabase.from("circuits").select("*").or("status.eq.published,status.is.null").order("circuit_name");
     return ensureNoError(result) as Circuit[];
   }, []);
 }
@@ -154,7 +154,7 @@ export async function deleteCircuit(id: number) {
 
 export async function listSeasons(): Promise<Season[]> {
   return readWithFallback("listSeasons", async () => {
-    const result = await supabase.from("seasons").select("*").order("year", { ascending: false });
+    const result = await supabase.from("seasons").select("*").or("status.eq.published,status.is.null").order("year", { ascending: false });
     return ensureNoError(result) as Season[];
   }, []);
 }
@@ -413,4 +413,42 @@ export async function updateTimelineEvent(id: number, data: Omit<TimelineEvent, 
 export async function deleteTimelineEvent(id: number) {
   const result = await supabase.from("timeline_events").delete().eq("id", id);
   return ensureNoError(result);
+}
+
+
+// Admin queries (include drafts)
+export async function listTeamsAdmin(): Promise<Team[]> {
+  return readWithFallback("listTeamsAdmin", async () => {
+    const result = await supabase.from("teams").select("*").order("team_name");
+    return ensureNoError(result) as Team[];
+  }, []);
+}
+
+export async function listDriversAdmin(): Promise<Driver[]> {
+  return readWithFallback("listDriversAdmin", async () => {
+    const driversResult = await supabase.from("drivers").select("*").order("name");
+    const drivers = ensureNoError(driversResult) as Driver[];
+    const linksResult = await supabase.from("driver_teams").select("driver_id, team_id");
+    const links = ensureNoError(linksResult) as { driver_id: number; team_id: number }[];
+    const map = new Map<number, number[]>();
+    links.forEach((link) => {
+      if (!map.has(link.driver_id)) map.set(link.driver_id, []);
+      map.get(link.driver_id)?.push(link.team_id);
+    });
+    return drivers.map((driver) => ({ ...driver, team_ids: map.get(driver.id) ?? [] }));
+  }, []);
+}
+
+export async function listCircuitsAdmin(): Promise<Circuit[]> {
+  return readWithFallback("listCircuitsAdmin", async () => {
+    const result = await supabase.from("circuits").select("*").order("circuit_name");
+    return ensureNoError(result) as Circuit[];
+  }, []);
+}
+
+export async function listSeasonsAdmin(): Promise<Season[]> {
+  return readWithFallback("listSeasonsAdmin", async () => {
+    const result = await supabase.from("seasons").select("*").order("year", { ascending: false });
+    return ensureNoError(result) as Season[];
+  }, []);
 }

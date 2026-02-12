@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { driverSchema } from "../../../lib/validators";
 import type { Driver } from "../../../types";
-import { TextAreaField, TextField } from "../../../components/FormFields";
+import { TextAreaField, TextField, SelectField } from "../../../components/FormFields";
 import MultiSelectField from "../../../components/MultiSelectField";
 import ImagePreview from "../../admin/components/ImagePreview";
 import { useReferenceStore } from "../../../store/references";
@@ -30,6 +30,7 @@ export default function DriverForm({ initialData }: { initialData?: Driver | nul
       fastest_laps: initialData?.fastest_laps?.toString() ?? "0",
       biography: initialData?.biography ?? "",
       team_ids: initialData?.team_ids ?? [],
+      status: initialData?.status ?? "published",
     },
   });
 
@@ -81,6 +82,18 @@ export default function DriverForm({ initialData }: { initialData?: Driver | nul
       </div>
       <div className="md:col-span-2">
         <TextAreaField label="Biography" name="biography" register={form.register} error={form.formState.errors.biography} />
+      </div>
+      <div className="md:col-span-2">
+        <SelectField
+          label="Status"
+          name="status"
+          register={form.register}
+          options={[
+            { value: "published", label: "Published" },
+            { value: "draft", label: "Draft" },
+          ]}
+          error={form.formState.errors.status}
+        />
       </div>
       <div className="md:col-span-2">
         <ImagePreview url={profileUrl} />

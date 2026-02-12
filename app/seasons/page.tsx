@@ -14,37 +14,46 @@ export default async function SeasonsPage() {
   return (
     <div>
       <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-12">
-        <h1 className="text-4xl md:text-6xl font-semibold mb-8">Seasons Archive</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 fade-in-up">
+      <main className="max-w-7xl mx-auto px-8 py-16 space-y-12">
+        <div>
+          <h1 className="section-title">Seasons</h1>
+          <p className="mt-4 text-white/60 max-w-2xl">Browse every archived Formula 1 season.</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {seasons.map((season) => {
             const champion = drivers.find((driver) => driver.id === season.champion_driver_id);
             const team = teams.find((t) => t.id === season.champion_team_id);
             return (
               <Link key={season.id} href={`/seasons/${season.id}`}>
-                <Card className="rounded-2xl overflow-hidden backdrop-blur-md bg-white/5 border border-white/10 shadow-xl hover:scale-105 transition-all duration-300 ease-out p-8">
-                  <div className="text-xs tracking-widest uppercase text-white/60 mb-2">Season</div>
-                  <h2 className="text-2xl font-semibold text-white mb-4">{season.year}</h2>
-                  <div className="space-y-2 text-base text-white/80">
+                <Card className="hover:scale-105">
+                  <div className="text-xs text-white/50 mb-2">Season</div>
+                  <h2 className="text-4xl font-bold mb-6">{season.year}</h2>
+                  <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
-                      <span>Champion</span>
-                      <span className="font-semibold">{champion?.name ?? "TBD"}</span>
+                      <span className="text-white/60">Champion</span>
+                      <span className="font-medium">{champion?.name ?? "TBD"}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Constructor</span>
-                      <span className="font-semibold">{team?.team_name ?? "TBD"}</span>
+                      <span className="text-white/60">Constructor</span>
+                      <span className="font-medium">{team?.team_name ?? "TBD"}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Total Races</span>
-                      <span className="font-semibold">{season.total_races}</span>
+                      <span className="text-white/60">Total Races</span>
+                      <span className="font-medium">{season.total_races}</span>
                     </div>
                   </div>
                 </Card>
               </Link>
             );
           })}
-          {!seasons.length && <div className="text-sm text-f1-muted">No seasons available yet.</div>}
         </div>
+        
+        {!seasons.length && (
+          <div className="glass rounded-2xl p-8 text-center text-white/50">
+            No seasons available yet.
+          </div>
+        )}
       </main>
       <Footer text="Browse every archived Formula 1 season." />
     </div>

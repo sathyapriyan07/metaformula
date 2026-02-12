@@ -1,6 +1,6 @@
 export function Badge({ children }: { children: string }) {
   return (
-    <span className="inline-flex rounded-full border border-f1-cyan/40 bg-f1-cyan/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-f1-cyan shadow-neon">
+    <span className="inline-flex rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium tracking-wide text-white/80">
       {children}
     </span>
   );

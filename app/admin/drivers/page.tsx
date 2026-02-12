@@ -1,6 +1,7 @@
 ﻿import AdminHeader from "../components/AdminHeader";
-import { listDrivers, listTeams } from "../../../lib/queries";
+import { listDriversAdmin, listTeamsAdmin } from "../../../lib/queries";
 import ModuleList from "../components/ModuleList";
+import { StatusBadge } from "../../../components/StatusBadge";
 
 
 export const dynamic = "force-dynamic";
@@ -11,11 +12,12 @@ interface DriverRow {
   nationality: string;
   titles: number;
   teams: string;
+  status: "draft" | "published" | undefined;
 }
 
 export default async function AdminDriversPage() {
-  const drivers = await listDrivers();
-  const teams = await listTeams();
+  const drivers = await listDriversAdmin();
+  const teams = await listTeamsAdmin();
 
   const rows: DriverRow[] = drivers.map((driver) => ({
     id: driver.id,
@@ -27,6 +29,7 @@ export default async function AdminDriversPage() {
         .map((id) => teams.find((team) => team.id === id)?.team_name)
         .filter(Boolean)
         .join(", ") || "—",
+    status: driver.status,
   }));
 
   const columns: { key: keyof DriverRow; label: string }[] = [

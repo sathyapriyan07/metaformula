@@ -1,4 +1,4 @@
-﻿import AdminHeader from "../components/AdminHeader";
+import AdminHeader from "../components/AdminHeader";
 import Card from "../../../components/Card";
 import {
   listCircuits,
@@ -38,15 +38,15 @@ export default async function AdminDashboardPage() {
     <div>
       <AdminHeader
         title="Dashboard"
-        description="Quick status on your historical archive. All data is curated manually."
+        description="Quick status on your historical archive."
         actionHref="/admin/seasons"
         actionLabel="Manage Seasons"
       />
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {metrics.map((metric) => (
           <Card key={metric.label}>
-            <div className="label">{metric.label}</div>
-            <div className="mt-4 font-display text-4xl tracking-[0.2em] text-white">{metric.value}</div>
+            <div className="text-xs text-white/50">{metric.label}</div>
+            <div className="mt-4 text-4xl font-bold">{metric.value}</div>
           </Card>
         ))}
       </div>

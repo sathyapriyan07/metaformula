@@ -78,6 +78,7 @@ export const driverSchema = z.object({
         .refine((value) => !Number.isNaN(value), "Must be a number")
     )
     .optional(),
+  status: z.enum(["draft", "published"]).optional(),
 });
 
 export const teamSchema = z.object({
@@ -86,6 +87,7 @@ export const teamSchema = z.object({
   base_country: nullableText,
   championships: nullableNumber,
   active_years: nullableText,
+  status: z.enum(["draft", "published"]).optional(),
 });
 
 export const circuitSchema = z.object({
@@ -103,6 +105,7 @@ export const circuitSchema = z.object({
     })
     .refine((value) => value === null || /^\d{4}$/.test(value), "Year must be 4 digits")
     .transform((value) => (value === null ? null : Number(value))),
+  status: z.enum(["draft", "published"]).optional(),
 });
 
 export const seasonSchema = z.object({
@@ -111,6 +114,7 @@ export const seasonSchema = z.object({
   champion_team_id: nullableId,
   total_races: requiredNumber,
   banner_image_url: httpsUrl,
+  status: z.enum(["draft", "published"]).optional(),
 });
 
 export const raceSchema = z.object({

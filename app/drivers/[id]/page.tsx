@@ -3,6 +3,8 @@ import Footer from "../../../components/Footer";
 import RemoteImage from "../../../components/RemoteImage";
 import { Badge } from "../../../components/Badge";
 import { StatRow } from "../../../components/StatRow";
+import FavoriteButton from "../../../components/FavoriteButton";
+import { DriverStatsChart } from "../../../components/Charts";
 import { getDriver, listTeams } from "../../../lib/queries";
 
 export const dynamic = "force-dynamic";
@@ -16,8 +18,8 @@ export default async function DriverDetailPage({ params }: { params: Promise<{ i
     return (
       <div>
         <Navigation />
-        <main className="mx-auto w-full max-w-6xl px-6 py-10">
-          <p className="text-f1-muted">Driver not found.</p>
+        <main className="max-w-6xl mx-auto px-8 py-16">
+          <p className="text-white/50">Driver not found.</p>
         </main>
       </div>
     );
@@ -31,31 +33,62 @@ export default async function DriverDetailPage({ params }: { params: Promise<{ i
   return (
     <div>
       <Navigation />
-      <main className="mx-auto w-full max-w-6xl px-6 py-10">
-        <section className="grid gap-8 md:grid-cols-[1fr_1.2fr]">
-          <div className="relative min-h-[280px] overflow-hidden rounded-2xl border border-white/10">
-            <RemoteImage src={driver.profile_image_url ?? null} alt={driver.name} fill className="object-cover" />
+      
+      <section className="relative h-[50vh] overflow-hidden">
+        <div className="absolute inset-0">
+          <RemoteImage 
+            src={driver.profile_image_url ?? null} 
+            alt={driver.name} 
+            fill 
+            className="object-cover blur-2xl opacity-30" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/60 to-black" />
+        </div>
+      </section>
+
+      <main className="max-w-6xl mx-auto px-8 -mt-32 relative z-10 pb-20">
+        <div className="grid md:grid-cols-[300px_1fr] gap-8">
+          <div className="glass rounded-2xl overflow-hidden aspect-[3/4]">
+            <RemoteImage 
+              src={driver.profile_image_url ?? null} 
+              alt={driver.name} 
+              fill 
+              className="object-contain" 
+            />
           </div>
-          <div className="glass-strong rounded-2xl p-6">
-            <Badge>{driver.nationality ?? "Unknown"}</Badge>
-            <h1 className="mt-4 font-display text-4xl tracking-[0.2em]">{driver.name}</h1>
-            <p className="mt-2 text-sm text-f1-muted">Birthdate: {driver.birthdate ?? "â€”"}</p>
-            <p className="mt-2 text-sm text-f1-muted">Teams: {teamNames || "Independent"}</p>
-            <div className="mt-6 space-y-3">
+
+          <div className="space-y-6">
+            <div className="glass rounded-2xl p-8">
+              <div className="flex items-center justify-between mb-4">
+                <Badge>{driver.nationality ?? "Unknown"}</Badge>
+                <FavoriteButton id={driver.id} type="driver" name={driver.name} />
+              </div>
+              <h1 className="text-5xl font-bold mt-4 mb-2">{driver.name}</h1>
+              <p className="text-white/50 mb-6">Born: {driver.birthdate ?? "—"}</p>
+              <p className="text-white/60">Teams: {teamNames || "Independent"}</p>
+            </div>
+
+            <div className="glass rounded-2xl p-8 space-y-4">
+              <h2 className="text-xl font-bold mb-4">Career Stats</h2>
               <StatRow label="Championships" value={driver.championships ?? 0} />
               <StatRow label="Wins" value={driver.wins ?? 0} />
               <StatRow label="Podiums" value={driver.podiums ?? 0} />
               <StatRow label="Poles" value={driver.poles ?? 0} />
               <StatRow label="Fastest Laps" value={driver.fastest_laps ?? 0} />
             </div>
-          </div>
-        </section>
 
-        <section className="mt-8 glass-strong rounded-2xl p-6">
-          <h2 className="section-title">Biography</h2>
-          <p className="mt-4 text-sm text-f1-muted">{driver.biography || "No biography yet."}</p>
-        </section>
+            {driver.biography && (
+              <div className="glass rounded-2xl p-8">
+                <h2 className="text-xl font-bold mb-4">Biography</h2>
+                <p className="text-white/70 leading-relaxed">{driver.biography}</p>
+              </div>
+            )}
+
+            <DriverStatsChart driver={driver} />
+          </div>
+        </div>
       </main>
+      
       <Footer text="Curated driver profiles." />
     </div>
   );
