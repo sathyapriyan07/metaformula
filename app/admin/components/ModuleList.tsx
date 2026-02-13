@@ -39,16 +39,16 @@ export default function ModuleList<T extends { id: number }>({
         columns={columns}
         rows={rows}
         actions={(row) => (
-          <div className="flex justify-end gap-2">
+          <div className="flex gap-2 md:justify-end">
             <Link
               href={`${modulePath}/${row.id}`}
-              className="rounded-full border border-white/20 px-3 py-1 text-xs uppercase tracking-[0.2em] text-white"
+              className="flex-1 md:flex-none rounded-lg border border-white/20 px-3 py-1.5 text-xs uppercase tracking-wider text-white text-center hover:bg-white/5 transition-colors"
             >
               Edit
             </Link>
             <button
               onClick={() => setPendingDelete(row)}
-              className="rounded-full border border-f1-red/60 px-3 py-1 text-xs uppercase tracking-[0.2em] text-f1-red"
+              className="flex-1 md:flex-none rounded-lg border border-red-600/60 px-3 py-1.5 text-xs uppercase tracking-wider text-red-500 hover:bg-red-600/10 transition-colors"
             >
               Delete
             </button>

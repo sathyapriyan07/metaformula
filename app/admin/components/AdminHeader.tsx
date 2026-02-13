@@ -7,15 +7,15 @@ export default function AdminHeader({ title, description, actionHref, actionLabe
   actionLabel: string;
 }) {
   return (
-    <div className="glass rounded-2xl p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+    <div className="glass rounded-xl p-4 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
       <div>
-        <div className="text-xs text-white/50 mb-2">Admin Module</div>
-        <h1 className="text-3xl font-bold">{title}</h1>
-        <p className="mt-2 text-sm text-white/60">{description}</p>
+        <div className="text-xs text-white/50 mb-1 uppercase tracking-wider">Admin Module</div>
+        <h1 className="text-2xl md:text-3xl font-bold text-white">{title}</h1>
+        <p className="mt-1 text-sm text-white/60">{description}</p>
       </div>
       <Link
         href={actionHref}
-        className="px-6 py-3 rounded-full bg-white/10 text-sm font-medium hover:bg-white/20 hover:scale-105 whitespace-nowrap"
+        className="w-full md:w-auto px-4 py-2.5 rounded-lg bg-red-600 text-sm font-medium text-white hover:bg-red-700 transition-colors text-center whitespace-nowrap"
       >
         {actionLabel}
       </Link>

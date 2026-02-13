@@ -100,21 +100,6 @@ export default function Navigation() {
           </div>
         </div>
       </header>
-
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-lg border-t border-white/10">
-        <div className="flex items-center justify-around px-4 py-3">
-          {mobileLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg hover:bg-white/5"
-            >
-              <span className="text-xs text-white/70 uppercase tracking-wider font-semibold">{link.label}</span>
-            </Link>
-          ))}
-        </div>
-      </nav>
     </>
   );
 }

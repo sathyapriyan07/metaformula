@@ -77,7 +77,7 @@ async function DriversGrid() {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 px-3 md:grid-cols-3 md:gap-4 md:px-0 lg:grid-cols-4">
         {drivers.map((driver, index) => {
           const teamName = teamsById.get(driver.team_ids?.[0] ?? -1) ?? "Independent";
           return (

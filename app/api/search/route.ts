@@ -13,15 +13,36 @@ export async function GET(request: NextRequest) {
   const results: any[] = [];
 
   try {
-    const { data: drivers } = await supabase
-      .from("drivers")
-      .select("id, name, nationality")
-      .or(`name.ilike.%${query}%,nationality.ilike.%${query}%`)
-      .limit(5);
+    const [driversRes, teamsRes, circuitsRes, seasonsRes, timelineRes] = await Promise.all([
+      supabase
+        .from("drivers")
+        .select("id, name, nationality")
+        .or(`name.ilike.%${query}%,nationality.ilike.%${query}%`)
+        .limit(5),
+      supabase
+        .from("teams")
+        .select("id, team_name, base_country")
+        .ilike("team_name", `%${query}%`)
+        .limit(5),
+      supabase
+        .from("circuits")
+        .select("id, circuit_name, country")
+        .or(`circuit_name.ilike.%${query}%,country.ilike.%${query}%`)
+        .limit(5),
+      supabase
+        .from("seasons")
+        .select("id, year")
+        .limit(20),
+      supabase
+        .from("timeline_events")
+        .select("id, title, year")
+        .ilike("title", `%${query}%`)
+        .limit(5),
+    ]);
 
-    if (drivers) {
+    if (driversRes.data) {
       results.push(
-        ...drivers.map((d) => ({
+        ...driversRes.data.map((d) => ({
           id: d.id,
           name: d.name,
           type: "driver",
@@ -30,15 +51,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: teams } = await supabase
-      .from("teams")
-      .select("id, team_name, base_country")
-      .ilike("team_name", `%${query}%`)
-      .limit(5);
-
-    if (teams) {
+    if (teamsRes.data) {
       results.push(
-        ...teams.map((t) => ({
+        ...teamsRes.data.map((t) => ({
           id: t.id,
           name: t.team_name,
           type: "team",
@@ -47,15 +62,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: circuits } = await supabase
-      .from("circuits")
-      .select("id, circuit_name, country")
-      .or(`circuit_name.ilike.%${query}%,country.ilike.%${query}%`)
-      .limit(5);
-
-    if (circuits) {
+    if (circuitsRes.data) {
       results.push(
-        ...circuits.map((c) => ({
+        ...circuitsRes.data.map((c) => ({
           id: c.id,
           name: c.circuit_name,
           type: "circuit",
@@ -64,23 +73,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: seasons } = await supabase
-      .from("seasons")
-      .select("id, year")
-      .limit(10);
-
-    if (seasons) {
-      const filtered = seasons.filter((s) => String(s.year).includes(query));
+    if (seasonsRes.data) {
+      const filtered = seasonsRes.data.filter((s) => String(s.year).includes(query));
       results.push(
-        ...filtered.map((s) => ({
-          id: s.id,
+        ...filtered.slice(0, 5).map((s) => ({
+          id: s.year,
           name: `${s.year} Season`,
           type: "season",
         }))
       );
     }
 
-    return NextResponse.json({ results: results.slice(0, 20) });
+    if (timelineRes.data) {
+      results.push(
+        ...timelineRes.data.map((t) => ({
+          id: t.id,
+          name: t.title,
+          type: "timeline",
+          subtitle: t.year ? `${t.year}` : undefined,
+        }))
+      );
+    }
+
+    return NextResponse.json({ results: results.slice(0, 25) });
   } catch (error) {
     console.error("Search error:", error);
     return NextResponse.json({ results: [] });

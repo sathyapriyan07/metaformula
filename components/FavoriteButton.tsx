@@ -5,9 +5,10 @@ interface FavoriteButtonProps {
   id: number;
   type: FavoriteType;
   name: string;
+  className?: string;
 }
 
-export default function FavoriteButton({ id, type, name }: FavoriteButtonProps) {
+export default function FavoriteButton({ id, type, name, className }: FavoriteButtonProps) {
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore();
   const favorited = isFavorite(id, type);
 
@@ -22,7 +23,7 @@ export default function FavoriteButton({ id, type, name }: FavoriteButtonProps) 
   return (
     <button
       onClick={handleToggle}
-      className="p-2 rounded-full glass hover:bg-white/20"
+      className={`p-2 rounded-full border border-white/10 hover:bg-white/5 transition-colors ${className || ""}`}
       aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
     >
       <svg
