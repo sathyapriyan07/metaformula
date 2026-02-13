@@ -18,6 +18,10 @@ CREATE TABLE IF NOT EXISTS season_stats (
 -- Enable RLS
 ALTER TABLE season_stats ENABLE ROW LEVEL SECURITY;
 
+-- Re-runnable policy setup
+DROP POLICY IF EXISTS "Public read" ON season_stats;
+DROP POLICY IF EXISTS "Admin write" ON season_stats;
+
 -- Public read policy
 CREATE POLICY "Public read" ON season_stats FOR SELECT USING (true);
 
@@ -115,18 +119,38 @@ RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 DECLARE
-  v_season_id BIGINT;
+  v_old_season_id BIGINT;
+  v_new_season_id BIGINT;
 BEGIN
-  -- Get season_id from the race
-  IF TG_OP = 'DELETE' THEN
-    SELECT season_id INTO v_season_id FROM races WHERE id = OLD.race_id;
+  -- Trigger can fire on both races and race_results_positions.
+  -- Use the correct keys for each table.
+  IF TG_TABLE_NAME = 'races' THEN
+    IF TG_OP = 'DELETE' THEN
+      v_old_season_id := OLD.season_id;
+    ELSIF TG_OP = 'UPDATE' THEN
+      v_old_season_id := OLD.season_id;
+      v_new_season_id := NEW.season_id;
+    ELSE
+      v_new_season_id := NEW.season_id;
+    END IF;
   ELSE
-    SELECT season_id INTO v_season_id FROM races WHERE id = NEW.race_id;
+    IF TG_OP = 'DELETE' THEN
+      SELECT season_id INTO v_old_season_id FROM races WHERE id = OLD.race_id;
+    ELSIF TG_OP = 'UPDATE' THEN
+      SELECT season_id INTO v_old_season_id FROM races WHERE id = OLD.race_id;
+      SELECT season_id INTO v_new_season_id FROM races WHERE id = NEW.race_id;
+    ELSE
+      SELECT season_id INTO v_new_season_id FROM races WHERE id = NEW.race_id;
+    END IF;
   END IF;
 
-  -- Recalculate stats for this season
-  IF v_season_id IS NOT NULL THEN
-    PERFORM recalculate_season_stats(v_season_id);
+  -- Recalculate affected season(s). On updates where season changes, recalc both.
+  IF v_old_season_id IS NOT NULL THEN
+    PERFORM recalculate_season_stats(v_old_season_id);
+  END IF;
+
+  IF v_new_season_id IS NOT NULL AND v_new_season_id <> v_old_season_id THEN
+    PERFORM recalculate_season_stats(v_new_season_id);
   END IF;
 
   RETURN NULL;
