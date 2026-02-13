@@ -1,4 +1,5 @@
-﻿﻿import { createSupabaseServer } from "./supabase/server";
+import { createSupabaseServer } from "./supabase/server";
+import { getUserRole, isAdminRole } from "./roles";
 
 export async function requireAdminSession() {
   const supabase = await createSupabaseServer();
@@ -10,8 +11,8 @@ export async function requireAdminSession() {
     throw new Error("No session found");
   }
 
-  const role = session.user.app_metadata?.role;
-  if (role !== "admin") {
+  const role = getUserRole(session.user);
+  if (!isAdminRole(role)) {
     throw new Error("Admin access required");
   }
 

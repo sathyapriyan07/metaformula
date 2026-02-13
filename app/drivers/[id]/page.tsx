@@ -5,7 +5,8 @@ import { Badge } from "../../../components/Badge";
 import { StatRow } from "../../../components/StatRow";
 import FavoriteButton from "../../../components/FavoriteButton";
 import { DriverStatsChart } from "../../../components/Charts";
-import { getDriver, listTeams } from "../../../lib/queries";
+import SeasonPerformance from "../../../components/SeasonPerformance";
+import { getDriver, listTeams, getDriverSeasonStats } from "../../../lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export default async function DriverDetailPage({ params }: { params: Promise<{ i
   const { id } = await params;
   const driver = await getDriver(Number(id));
   const teams = await listTeams();
+  const seasonStats = await getDriverSeasonStats(Number(id));
 
   if (!driver) {
     return (
@@ -85,6 +87,8 @@ export default async function DriverDetailPage({ params }: { params: Promise<{ i
             )}
 
             <DriverStatsChart driver={driver} />
+
+            <SeasonPerformance stats={seasonStats} />
           </div>
         </div>
       </main>

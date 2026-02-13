@@ -2,14 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Apple TV Dark Theme */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans:wght@400;500;600;700;800;900&display=swap');
+
+/* F1 Official Style */
 body {
   @apply min-h-screen text-white antialiased overflow-x-hidden;
-  background: linear-gradient(180deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+  background: #000000;
   padding-bottom: 5rem;
 }
 
-/* Glass morphism */
+/* Glass morphism - ADMIN ONLY */
 .glass {
   @apply backdrop-blur-md bg-white/[0.06] border border-white/10 shadow-glass;
 }
@@ -18,13 +20,40 @@ body {
   @apply backdrop-blur-md bg-white/[0.08] border border-white/10 shadow-glass;
 }
 
+/* F1 Public Panels */
+.f1-panel {
+  @apply bg-f1-dark border border-white/[0.08] shadow-f1;
+}
+
+.f1-panel-hover {
+  @apply bg-f1-dark border border-white/[0.08] shadow-f1 hover:border-f1-red/50 hover:shadow-f1-hover transition-all duration-300;
+}
+
 /* Typography */
 .section-title {
-  @apply text-3xl md:text-5xl font-bold tracking-tight;
+  @apply text-4xl md:text-6xl font-bold tracking-tight uppercase;
+}
+
+.f1-heading {
+  @apply font-bold tracking-f1 uppercase;
+}
+
+.f1-stat {
+  @apply text-5xl md:text-7xl font-black;
 }
 
 .label {
   @apply text-xs uppercase tracking-widest text-white/50;
+}
+
+/* Red Accent Line */
+.red-accent {
+  @apply relative;
+}
+
+.red-accent::after {
+  content: '';
+  @apply absolute bottom-0 left-0 w-20 h-1 bg-f1-red;
 }
 
 /* Animations */
@@ -43,9 +72,22 @@ body {
   }
 }
 
+.slide-underline {
+  @apply relative;
+}
+
+.slide-underline::after {
+  content: '';
+  @apply absolute bottom-0 left-0 w-0 h-0.5 bg-f1-red transition-all duration-300;
+}
+
+.slide-underline:hover::after {
+  @apply w-full;
+}
+
 /* Smooth transitions */
 * {
-  @apply transition-all duration-300;
+  @apply transition-colors duration-200;
 }
 
 /* Scrollbar */
@@ -57,13 +99,23 @@ select::-webkit-scrollbar,
 
 select::-webkit-scrollbar-thumb,
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(225, 6, 0, 0.5);
   border-radius: 8px;
 }
 
 select::-webkit-scrollbar-track,
 ::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.3);
+}
+
+/* Hide scrollbar for mobile tabs */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 /* Desktop */

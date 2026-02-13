@@ -16,38 +16,38 @@ export default async function CircuitsPage() {
       <Navigation />
       <main className="max-w-7xl mx-auto px-8 py-16 space-y-12">
         <div>
-          <h1 className="section-title">Circuits</h1>
-          <p className="mt-4 text-white/60 max-w-2xl">Legendary venues of Formula 1.</p>
+          <h1 className="section-title red-accent pb-4">CIRCUITS</h1>
+          <p className="mt-6 text-white/70 max-w-2xl text-lg">Legendary venues of Formula 1.</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {circuits.map((circuit) => (
             <Link key={circuit.id} href={`/circuits/${circuit.id}`}>
-              <Card className="hover:scale-[1.01]">
+              <Card className="hover:scale-[1.02] group">
                 {circuit.track_layout_url && (
-                  <div className="relative aspect-video mb-6 rounded-xl overflow-hidden bg-white/5">
+                  <div className="relative aspect-video mb-6 rounded-lg overflow-hidden bg-black border border-white/10">
                     <RemoteImage
                       src={circuit.track_layout_url}
                       alt={circuit.circuit_name}
                       fill
-                      className="object-contain"
+                      className="object-contain p-4 group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
                 )}
-                <div className="text-xs text-white/50 mb-2">Circuit</div>
-                <h2 className="text-2xl font-bold mb-6">{circuit.circuit_name}</h2>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Country</span>
-                    <span className="font-medium">{circuit.country ?? "—"}</span>
+                <div className="text-xs uppercase tracking-widest text-f1-red mb-3 font-bold">CIRCUIT</div>
+                <h2 className="text-2xl font-bold mb-6 uppercase tracking-f1">{circuit.circuit_name}</h2>
+                <div className="space-y-4 text-sm">
+                  <div className="flex justify-between items-center pb-3 border-b border-white/10">
+                    <span className="text-white/60 uppercase tracking-wider">Country</span>
+                    <span className="font-bold text-white">{circuit.country ?? "—"}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Lap Length</span>
-                    <span className="font-medium">{formatLapLength(circuit.lap_length_km)}</span>
+                  <div className="flex justify-between items-center pb-3 border-b border-white/10">
+                    <span className="text-white/60 uppercase tracking-wider">Lap Length</span>
+                    <span className="font-bold text-f1-red">{formatLapLength(circuit.lap_length_km)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/60">First GP</span>
-                    <span className="font-medium">{circuit.first_gp_year ?? "—"}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/60 uppercase tracking-wider">First GP</span>
+                    <span className="font-bold text-white">{circuit.first_gp_year ?? "—"}</span>
                   </div>
                 </div>
               </Card>
@@ -56,7 +56,7 @@ export default async function CircuitsPage() {
         </div>
         
         {!circuits.length && (
-          <div className="glass rounded-2xl p-8 text-center text-white/50">
+          <div className="f1-panel rounded-lg p-12 text-center text-white/50">
             No circuits available yet.
           </div>
         )}

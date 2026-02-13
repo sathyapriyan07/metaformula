@@ -9,21 +9,21 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'Noto Sans', 'system-ui', 'sans-serif'],
+        bebas: ['Bebas Neue', 'Inter', 'sans-serif'],
       },
       colors: {
-        'apple-dark': '#000000',
-        'apple-charcoal': '#0a0a0a',
-        'apple-gray': '#1c1c1e',
-        'apple-muted': '#8e8e93',
+        'f1-red': '#E10600',
+        'f1-red-hover': '#B30500',
+        'f1-dark': '#111111',
       },
       boxShadow: {
         'glass': '0 8px 32px rgba(0, 0, 0, 0.6)',
-        'glow': '0 0 20px rgba(255, 255, 255, 0.1)',
-        'glow-hover': '0 0 30px rgba(255, 255, 255, 0.15)',
+        'f1': '0 4px 20px rgba(0, 0, 0, 0.5)',
+        'f1-hover': '0 8px 30px rgba(225, 6, 0, 0.3)',
       },
-      backdropBlur: {
-        'glass': '24px',
+      letterSpacing: {
+        'f1': '0.05em',
       },
     },
   },

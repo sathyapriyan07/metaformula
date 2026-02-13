@@ -76,10 +76,12 @@ export default async function RecordsPage() {
   return (
     <div>
       <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-12">
-        <h1 className="text-4xl md:text-6xl font-semibold mb-4">Records</h1>
-        <p className="text-lg text-white/70 mb-8">Automatically derived milestones from the historical archive database.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 fade-in-up">
+      <main className="max-w-7xl mx-auto px-8 py-16 space-y-12">
+        <div>
+          <h1 className="section-title red-accent pb-4">RECORDS</h1>
+          <p className="mt-6 text-white/70 max-w-2xl text-lg">Automatically derived milestones from the historical archive database.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {cards.map((card) => (
             <RecordCard key={card.title} title={card.title} value={card.value} subtitle={card.subtitle} />
           ))}

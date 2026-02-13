@@ -11,10 +11,12 @@ export default async function TimelinePage() {
   return (
     <div>
       <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-12">
-        <h1 className="text-4xl md:text-6xl font-semibold mb-4">Formula 1 Timeline</h1>
-        <p className="text-lg text-white/70 mb-8">A manually curated historical timeline across decades and landmark seasons.</p>
-        <div className="relative mt-8 border-l-2 border-white/15 pl-8 fade-in-up">
+      <main className="max-w-7xl mx-auto px-8 py-16 space-y-12">
+        <div>
+          <h1 className="section-title red-accent pb-4">TIMELINE</h1>
+          <p className="mt-6 text-white/70 max-w-2xl text-lg">A manually curated historical timeline across decades and landmark seasons.</p>
+        </div>
+        <div className="relative mt-8 border-l-2 border-f1-red/30 pl-8">
           <div className="space-y-8">
             {events.map((event) => (
               <TimelineEventCard

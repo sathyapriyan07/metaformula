@@ -35,7 +35,7 @@ async function HeroSection() {
 
   return (
     <>
-      <section className="relative h-[70vh] overflow-hidden">
+      <section className="relative h-[80vh] overflow-hidden">
         <div className="absolute inset-0">
           <RemoteImage 
             src={featured?.banner_image_url ?? null} 
@@ -43,21 +43,21 @@ async function HeroSection() {
             fill 
             className="object-cover" 
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
         </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-8 h-full flex flex-col justify-end pb-16">
-          <Badge>Featured Season</Badge>
-          <h1 className="text-5xl md:text-7xl font-bold mt-4 mb-6">
-            {featured ? `${featured.year} Season` : "F1 Historical Archive"}
+        <div className="relative z-10 max-w-7xl mx-auto px-8 h-full flex flex-col justify-end pb-20">
+          <Badge variant="red">FEATURED SEASON</Badge>
+          <h1 className="text-6xl md:text-8xl font-black mt-6 mb-6 uppercase tracking-tight">
+            {featured ? `${featured.year}` : "F1 ARCHIVE"}
           </h1>
-          <p className="text-lg text-white/70 max-w-2xl mb-8">
-            Curated Formula 1 archive. Every season, driver, and race meticulously documented.
+          <p className="text-lg md:text-xl text-white/80 max-w-3xl mb-10 leading-relaxed">
+            The complete Formula 1 historical archive. Every season, driver, and race meticulously documented.
           </p>
           <div className="flex gap-4">
-            <a href="/seasons" className="px-8 py-3 rounded-full bg-white text-black font-semibold hover:scale-105">
+            <a href="/seasons" className="px-8 py-4 bg-f1-red hover:bg-f1-red-hover text-white font-bold uppercase tracking-wider text-sm transition-all">
               Explore Seasons
             </a>
-            <a href="/compare/drivers" className="px-8 py-3 rounded-full glass text-white hover:scale-105">
+            <a href="/compare/drivers" className="px-8 py-4 border-2 border-white/20 hover:border-f1-red text-white font-bold uppercase tracking-wider text-sm transition-all">
               Compare Drivers
             </a>
           </div>
@@ -65,20 +65,20 @@ async function HeroSection() {
       </section>
 
       {featured && (
-        <main className="max-w-7xl mx-auto px-8 py-20">
-          <div className="glass rounded-2xl p-8 max-w-2xl">
-            <div className="grid grid-cols-3 gap-8 text-center">
-              <div>
-                <div className="text-3xl font-bold">{championDriver?.name ?? "TBD"}</div>
-                <div className="text-sm text-white/50 mt-2">Champion Driver</div>
+        <main className="max-w-7xl mx-auto px-8 py-16">
+          <div className="f1-panel rounded-lg p-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+              <div className="text-center md:text-left">
+                <div className="text-xs uppercase tracking-widest text-f1-red mb-3 font-bold">CHAMPION DRIVER</div>
+                <div className="f1-stat text-white">{championDriver?.name ?? "TBD"}</div>
               </div>
-              <div>
-                <div className="text-3xl font-bold">{championTeam?.team_name ?? "TBD"}</div>
-                <div className="text-sm text-white/50 mt-2">Champion Team</div>
+              <div className="text-center md:text-left">
+                <div className="text-xs uppercase tracking-widest text-f1-red mb-3 font-bold">CHAMPION TEAM</div>
+                <div className="f1-stat text-white">{championTeam?.team_name ?? "TBD"}</div>
               </div>
-              <div>
-                <div className="text-3xl font-bold">{featured.total_races ?? 0}</div>
-                <div className="text-sm text-white/50 mt-2">Total Races</div>
+              <div className="text-center md:text-left">
+                <div className="text-xs uppercase tracking-widest text-f1-red mb-3 font-bold">TOTAL RACES</div>
+                <div className="f1-stat text-white">{featured.total_races ?? 0}</div>
               </div>
             </div>
           </div>
@@ -92,26 +92,29 @@ async function DriverSpotlight() {
   const drivers = await listDrivers();
 
   return (
-    <main className="max-w-7xl mx-auto px-8 pb-20 space-y-8">
+    <main className="max-w-7xl mx-auto px-8 pb-20 space-y-10">
       <div className="flex items-center justify-between">
-        <h2 className="section-title">Driver Spotlight</h2>
-        <Badge>Curated</Badge>
+        <div>
+          <h2 className="section-title red-accent pb-4">DRIVER SPOTLIGHT</h2>
+        </div>
+        <Badge>CURATED</Badge>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {drivers.slice(0, 4).map((driver) => (
           <a key={driver.id} href={`/drivers/${driver.id}`} className="group">
-            <Card className="overflow-hidden">
-              <div className="relative aspect-[3/4] mb-4 rounded-xl overflow-hidden bg-white/5">
-                <RemoteImage 
-                  src={driver.profile_image_url ?? null} 
-                  alt={driver.name} 
-                  fill 
-                  className="object-contain group-hover:scale-105" 
-                />
+            <div className="relative f1-panel-hover rounded-lg overflow-hidden aspect-[3/4]">
+              <RemoteImage 
+                src={driver.profile_image_url ?? null} 
+                alt={driver.name} 
+                fill 
+                className="object-cover group-hover:scale-110 transition-transform duration-500" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <div className="text-xs text-white/60 mb-1 uppercase tracking-wider">{driver.nationality ?? "Unknown"}</div>
+                <h3 className="text-xl font-bold uppercase tracking-f1">{driver.name}</h3>
               </div>
-              <div className="text-xs text-white/50 mb-1">{driver.nationality ?? "Unknown"}</div>
-              <h3 className="text-lg font-semibold">{driver.name}</h3>
-            </Card>
+            </div>
           </a>
         ))}
       </div>

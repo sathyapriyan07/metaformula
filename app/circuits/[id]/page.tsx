@@ -2,13 +2,23 @@ import Navigation from "../../../components/Navigation";
 import Footer from "../../../components/Footer";
 import RemoteImage from "../../../components/RemoteImage";
 import { Badge } from "../../../components/Badge";
-import { getCircuit } from "../../../lib/queries";
+import CircuitHistory from "../../../components/CircuitHistory";
+import CircuitRecords from "../../../components/CircuitRecords";
+import { getCircuit, getCircuitHistory, getCircuitRecords } from "../../../lib/queries";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 120;
 
 export default async function CircuitDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const circuit = await getCircuit(Number(id));
+  const circuitId = Number(id);
+  
+  const [circuit, history, records] = await Promise.all([
+    getCircuit(circuitId),
+    getCircuitHistory(circuitId),
+    getCircuitRecords(circuitId),
+  ]);
+  
   const lapLengthText = circuit?.lap_length_km == null ? "--" : circuit.lap_length_km.toFixed(3);
 
   if (!circuit) {
@@ -55,6 +65,9 @@ export default async function CircuitDetailPage({ params }: { params: Promise<{ 
             </div>
           </div>
         </section>
+
+        <CircuitRecords records={records} />
+        <CircuitHistory history={history} />
       </main>
       <Footer text="Circuit details and layout imagery." />
     </div>

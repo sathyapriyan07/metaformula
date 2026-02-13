@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Navigation from "../../../components/Navigation";
 import Footer from "../../../components/Footer";
 import { getRace, listCircuits, listDrivers, listRaceResultPositionsByRace, listSeasons, listTeams } from "../../../lib/queries";
@@ -69,8 +70,46 @@ export default async function RaceDetailPage({ params }: { params: Promise<{ id:
                   return (
                     <tr key={row.id} className="border-b border-white/5 transition-all hover:bg-white/5">
                       <td className={`px-3 py-4 text-sm font-semibold ${positionClass(row.position)}`}>P{row.position}</td>
-                      <td className="px-3 py-4 text-sm text-white/90">{driver?.name ?? "—"}</td>
-                      <td className="px-3 py-4 text-sm text-white/90">{team?.team_name ?? "—"}</td>
+                      <td className="px-3 py-4 text-sm text-white/90">
+                        <div className="flex items-center gap-3">
+                          {driver?.profile_image_url ? (
+                            <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg border border-white/10 bg-neutral-900">
+                              <Image
+                                src={driver.profile_image_url}
+                                alt={driver.name}
+                                fill
+                                className="object-cover object-top transition-transform duration-300 hover:scale-105"
+                                sizes="40px"
+                                loading="lazy"
+                                unoptimized
+                              />
+                            </div>
+                          ) : (
+                            <div className="h-10 w-10 flex-shrink-0 rounded-lg border border-white/15 bg-neutral-900" />
+                          )}
+                          <span className="font-medium hover:text-red-500">{driver?.name ?? "—"}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-4 text-sm text-white/90">
+                        {team?.logo_url ? (
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-16 items-center justify-center overflow-hidden rounded-md border border-white/10 bg-neutral-900">
+                              <Image
+                                src={team.logo_url}
+                                alt={`${team.team_name} logo`}
+                                width={60}
+                                height={24}
+                                className="h-auto w-auto max-h-6 max-w-[56px] object-contain"
+                                loading="lazy"
+                                unoptimized
+                              />
+                            </div>
+                            <span className="hidden lg:inline">{team.team_name}</span>
+                          </div>
+                        ) : (
+                          <span>{team?.team_name ?? "—"}</span>
+                        )}
+                      </td>
                       <td className="px-3 py-4 text-sm text-white/90">{row.laps ?? "—"}</td>
                       <td className="px-3 py-4 text-sm text-white/90">{row.time ?? "—"}</td>
                       <td className="px-3 py-4 text-sm text-white/90">{row.points}</td>
@@ -92,8 +131,41 @@ export default async function RaceDetailPage({ params }: { params: Promise<{ id:
                     <span className={`text-sm font-semibold ${positionClass(row.position)}`}>P{row.position}</span>
                     <span className="text-xs uppercase tracking-[0.14em] text-white/60">{row.status}</span>
                   </div>
-                  <p className="mt-2 text-sm text-white/90">{driver?.name ?? "—"}</p>
-                  <p className="text-sm text-white/70">{team?.team_name ?? "—"}</p>
+                  <div className="mt-3 flex items-center gap-2">
+                    {driver?.profile_image_url ? (
+                      <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg border border-white/10 bg-neutral-900">
+                        <Image
+                          src={driver.profile_image_url}
+                          alt={driver.name}
+                          fill
+                          className="object-cover object-top"
+                          sizes="32px"
+                          loading="lazy"
+                          unoptimized
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-8 w-8 flex-shrink-0 rounded-lg border border-white/15 bg-neutral-900" />
+                    )}
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-white/90">{driver?.name ?? "—"}</p>
+                      <div className="mt-1 flex items-center gap-2">
+                        {team?.logo_url ? (
+                          <Image
+                            src={team.logo_url}
+                            alt={`${team.team_name} logo`}
+                            width={48}
+                            height={16}
+                            className="h-auto w-auto max-h-4 max-w-[48px] object-contain"
+                            loading="lazy"
+                            unoptimized
+                          />
+                        ) : (
+                          <span className="text-xs text-white/70">{team?.team_name ?? "—"}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   <div className="mt-3 grid grid-cols-3 gap-2 text-xs uppercase tracking-[0.14em] text-white/60">
                     <div>
                       <div>Laps</div>

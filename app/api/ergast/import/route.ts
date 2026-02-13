@@ -7,6 +7,7 @@ import {
   fetchCircuits,
   fetchRaces,
 } from "../../../../lib/ergastImport";
+import { isAdminUser } from "../../../../lib/roles";
 
 const VALID_TYPES = ["seasons", "drivers", "constructors", "circuits", "races", "driver_standings", "constructor_standings"] as const;
 type ImportType = typeof VALID_TYPES[number];
@@ -21,7 +22,7 @@ async function checkAdmin(request: NextRequest) {
     const { data: { user }, error } = await supabase.auth.getUser(token);
     if (error || !user) return false;
 
-    return user.app_metadata?.role === "admin";
+    return isAdminUser(user);
   } catch {
     return false;
   }

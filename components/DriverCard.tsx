@@ -1,53 +1,97 @@
 import Image from "next/image";
 
 interface DriverCardProps {
-  name: string;
-  number: string;
-  team: string;
-  image_url?: string | null;
-  flag_url?: string | null;
-  team_color: string;
+  full_name: string;
+  driver_number: string;
+  team_name: string;
+  nationality?: string | null;
+  portrait_image?: string | null;
+  nationality_flag?: string | null;
+  team_color?: string | null;
+  wins?: number | null;
+  podiums?: number | null;
+  championships?: number | null;
+  index?: number;
 }
 
-export default function DriverCard({ name, number, team, image_url, flag_url, team_color }: DriverCardProps) {
+export default function DriverCard({
+  full_name,
+  driver_number,
+  team_name,
+  nationality,
+  portrait_image,
+  nationality_flag,
+  team_color,
+  wins,
+  podiums,
+  championships,
+  index = 0,
+}: DriverCardProps) {
+  const accentColor = team_color?.trim() ? team_color : "#E10600";
+
   return (
-    <article className="group relative glass rounded-2xl overflow-hidden hover:scale-105 hover:shadow-glow-hover">
-      {/* Number Badge */}
-      <span className="absolute top-4 right-4 text-5xl font-bold text-white/10 z-10">
-        {number}
+    <article
+      className="group relative overflow-hidden rounded-xl border border-white/10 bg-[#111] transition-all duration-300 hover:scale-[1.03] md:hover:shadow-[0_14px_34px_rgba(225,6,0,0.28)] [animation:fadeInUp_0.45s_ease-out_both]"
+      style={{ animationDelay: `${Math.min(index, 10) * 45}ms` }}
+    >
+      <span className="pointer-events-none absolute right-3 top-2 z-10 font-bebas text-7xl leading-none text-white opacity-10">
+        {driver_number}
       </span>
-      
-      {/* Driver Image */}
-      <div className="relative aspect-[3/4] bg-gradient-to-b from-white/5 to-transparent">
-        {image_url && (
+
+      <div className="relative h-40 overflow-hidden bg-black md:h-56">
+        {portrait_image ? (
           <Image
-            src={image_url}
-            alt={name}
+            src={portrait_image}
+            alt={full_name}
             fill
-            className="object-contain p-4"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
             unoptimized
           />
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-zinc-800 via-zinc-900 to-black" />
         )}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/80 to-transparent" />
       </div>
-      
-      {/* Info */}
-      <div className="p-6 space-y-2">
-        {flag_url && (
-          <div className="flex items-center gap-2">
+
+      <div className="h-1 w-full" style={{ backgroundColor: accentColor }} />
+
+      <div className="space-y-2 px-3 pb-3 pt-2 md:px-4 md:pb-4">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="truncate text-sm font-bold uppercase tracking-tight text-white md:text-base">
+            {full_name}
+          </h3>
+          <span className="shrink-0 text-lg font-black leading-none text-f1-red">
+            {driver_number}
+          </span>
+        </div>
+
+        <p className="truncate text-[11px] uppercase tracking-[0.14em] text-white/65">
+          {team_name}
+        </p>
+
+        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.12em] text-white/70">
+          {nationality_flag && (
             <Image
-              src={flag_url}
-              alt={`${name} flag`}
-              width={20}
-              height={20}
-              className="rounded-sm"
+              src={nationality_flag}
+              alt={`${full_name} flag`}
+              width={18}
+              height={12}
+              className="h-3 w-[18px] rounded-[2px] object-cover"
               loading="lazy"
               unoptimized
             />
-            <p className="text-xs text-white/50">{team}</p>
-          </div>
-        )}
-        <h3 className="text-xl font-semibold truncate">{name}</h3>
+          )}
+          <span className="truncate">{nationality ?? "Unknown"}</span>
+        </div>
+
+        <div className="hidden items-center gap-3 border-t border-white/10 pt-2 text-[10px] uppercase tracking-[0.12em] text-white/60 md:flex">
+          <span>W {wins ?? 0}</span>
+          <span>P {podiums ?? 0}</span>
+          <span>C {championships ?? 0}</span>
+        </div>
+
+        <span className="block h-[2px] w-0 bg-f1-red transition-all duration-300 group-hover:w-full" />
       </div>
     </article>
   );

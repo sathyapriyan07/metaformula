@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useReferenceStore } from "../store/references";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GlobalSearch from "./GlobalSearch";
 
 const desktopLinks = [
@@ -18,7 +19,14 @@ const desktopLinks = [
 
 export default function Navigation() {
   const { user } = useReferenceStore();
-  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const [scrolled, setScrolled] = useState(false);
+  
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   
   const mobileLinks = [
     { href: "/", label: "Home" },
@@ -31,18 +39,20 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Navigation */}
-      <header className="hidden md:block sticky top-0 z-50 backdrop-blur-md bg-black/40 border-b border-white/10">
+      <header className={`hidden md:block sticky top-0 z-50 transition-all duration-300 ${
+        scrolled ? "bg-black/95 backdrop-blur-lg border-b border-white/10" : "bg-transparent"
+      }`}>
         <nav className="max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
-          <Link href="/" className="text-xl font-semibold tracking-tight">
-            F1 Archive
+          <Link href="/" className="text-2xl font-black tracking-tight uppercase text-f1-red">
+            F1 ARCHIVE
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <GlobalSearch />
             {desktopLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="px-4 py-2 rounded-full text-sm text-white/70 hover:text-white hover:bg-white/10"
+                className="px-4 py-2 text-sm font-semibold text-white/70 hover:text-white uppercase tracking-wider slide-underline"
               >
                 {link.label}
               </Link>
@@ -50,7 +60,7 @@ export default function Navigation() {
             {user?.role === "admin" && (
               <Link
                 href="/admin/dashboard"
-                className="ml-2 px-4 py-2 rounded-full text-sm bg-white/10 text-white hover:bg-white/20"
+                className="ml-2 px-4 py-2 text-sm font-bold bg-f1-red hover:bg-f1-red-hover text-white uppercase tracking-wider rounded"
               >
                 Admin
               </Link>
@@ -59,16 +69,48 @@ export default function Navigation() {
         </nav>
       </header>
 
+      {/* Mobile Header */}
+      <header className="md:hidden sticky top-0 z-50 bg-black/95 backdrop-blur-lg border-b border-white/10">
+        <div className="px-4 py-3 flex items-center justify-between">
+          <Link href="/" className="text-xl font-black tracking-tight uppercase text-f1-red">
+            F1 ARCHIVE
+          </Link>
+          <GlobalSearch />
+        </div>
+        
+        {/* Mobile Horizontal Tabs */}
+        <div className="overflow-x-auto scrollbar-none">
+          <div className="flex gap-4 px-4 py-2 whitespace-nowrap">
+            {desktopLinks.map((link) => {
+              const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`pb-2 text-sm font-medium tracking-wide transition-colors ${
+                    isActive
+                      ? "text-white border-b-2 border-red-600"
+                      : "text-white/70 hover:text-white"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </header>
+
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-black/60 border-t border-white/10">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-lg border-t border-white/10">
         <div className="flex items-center justify-around px-4 py-3">
           {mobileLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl hover:bg-white/10"
+              className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg hover:bg-white/5"
             >
-              <span className="text-xs text-white/70">{link.label}</span>
+              <span className="text-xs text-white/70 uppercase tracking-wider font-semibold">{link.label}</span>
             </Link>
           ))}
         </div>

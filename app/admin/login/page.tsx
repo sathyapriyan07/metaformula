@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowser } from "../../../lib/supabase/client";
 import { useReferenceStore } from "../../../store/references";
+import { getUserRole } from "../../../lib/roles";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -22,8 +23,8 @@ export default function AdminLoginPage() {
       return;
     }
     if (data.user) {
-      const role = data.user.app_metadata?.role || "user";
-      setUser({ id: data.user.id, email: data.user.email!, role });
+      const role = getUserRole(data.user) === "admin" ? "admin" : "user";
+      setUser({ id: data.user.id, email: data.user.email || "", role });
     }
     router.push("/admin/dashboard");
   };

@@ -1,5 +1,6 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { isAdminUser } from "./lib/roles";
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({
@@ -44,8 +45,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const role = session.user.app_metadata?.role;
-  if (role !== "admin") {
+  if (!isAdminUser(session.user)) {
     const homeUrl = request.nextUrl.clone();
     homeUrl.pathname = "/";
     return NextResponse.redirect(homeUrl);

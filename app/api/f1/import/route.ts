@@ -7,6 +7,7 @@ import {
   fetchOpenF1Sessions,
   OpenF1Error,
 } from "../../../../lib/openf1";
+import { isAdminUser } from "../../../../lib/roles";
 
 const VALID_TYPES = ["drivers", "teams", "circuits", "sessions"] as const;
 type ImportType = typeof VALID_TYPES[number];
@@ -27,7 +28,7 @@ async function checkAdminAuth(request: NextRequest): Promise<boolean> {
 
     if (error || !user) return false;
 
-    return user.app_metadata?.role === "admin";
+    return isAdminUser(user);
   } catch {
     return false;
   }

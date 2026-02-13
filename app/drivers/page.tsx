@@ -26,6 +26,22 @@ const DRIVER_NUMBERS: Record<string, string> = {
   "Nico Hulkenberg": "27", "Kevin Magnussen": "20", "Guanyu Zhou": "24"
 };
 
+const TEAM_COLORS: Record<string, string> = {
+  "Red Bull Racing": "#1E41FF",
+  Ferrari: "#E10600",
+  Mercedes: "#00D2BE",
+  McLaren: "#FF8700",
+  "Aston Martin": "#006F62",
+  Alpine: "#0090FF",
+  "Williams": "#005AFF",
+  "RB": "#2B4562",
+  "AlphaTauri": "#2B4562",
+  "Alfa Romeo": "#900000",
+  "Kick Sauber": "#52E252",
+  Haas: "#B6BABD",
+  Independent: "#E10600",
+};
+
 function getFlagUrl(nationality?: string | null) {
   if (!nationality) return null;
   const code = NATIONALITY_TO_FLAG[nationality.trim().toLowerCase()];
@@ -42,8 +58,8 @@ export default function DriversPage() {
       <Navigation />
       <main className="max-w-7xl mx-auto px-8 py-16 space-y-12">
         <div>
-          <h1 className="section-title">Drivers</h1>
-          <p className="mt-4 text-white/60 max-w-2xl">Historic Formula 1 roster curated manually.</p>
+          <h1 className="section-title red-accent pb-4">DRIVERS</h1>
+          <p className="mt-6 text-white/70 max-w-2xl text-lg">Historic Formula 1 roster curated manually.</p>
         </div>
         
         <Suspense fallback={<SkeletonGrid count={8} />}>
@@ -61,18 +77,23 @@ async function DriversGrid() {
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {drivers.map((driver) => {
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+        {drivers.map((driver, index) => {
           const teamName = teamsById.get(driver.team_ids?.[0] ?? -1) ?? "Independent";
           return (
-            <Link key={driver.id} href={`/drivers/${driver.id}`}>
+            <Link key={driver.id} href={`/drivers/${driver.id}`} className="block">
               <DriverCard
-                name={driver.name}
-                number={getDriverNumber(driver.name, driver.id)}
-                team={teamName}
-                image_url={driver.profile_image_url ?? null}
-                flag_url={getFlagUrl(driver.nationality)}
-                team_color=""
+                full_name={driver.name}
+                driver_number={getDriverNumber(driver.name, driver.id)}
+                team_name={teamName}
+                nationality={driver.nationality ?? null}
+                portrait_image={driver.profile_image_url ?? null}
+                nationality_flag={getFlagUrl(driver.nationality)}
+                team_color={TEAM_COLORS[teamName] ?? TEAM_COLORS.Independent}
+                wins={driver.wins}
+                podiums={driver.podiums}
+                championships={driver.championships}
+                index={index}
               />
             </Link>
           );
@@ -80,7 +101,7 @@ async function DriversGrid() {
       </div>
       
       {!drivers.length && (
-        <div className="glass rounded-2xl p-8 text-center text-white/50">
+        <div className="f1-panel rounded-lg p-12 text-center text-white/50">
           No drivers available yet.
         </div>
       )}

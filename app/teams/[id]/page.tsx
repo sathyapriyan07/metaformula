@@ -3,13 +3,22 @@ import Footer from "../../../components/Footer";
 import RemoteImage from "../../../components/RemoteImage";
 import { Badge } from "../../../components/Badge";
 import FavoriteButton from "../../../components/FavoriteButton";
-import { getTeam } from "../../../lib/queries";
+import TeamDrivers from "../../../components/TeamDrivers";
+import TeamPerformance from "../../../components/TeamPerformance";
+import { getTeam, getTeamDrivers, getTeamYearlyPerformance } from "../../../lib/queries";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 120;
 
 export default async function TeamDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const team = await getTeam(Number(id));
+  const teamId = Number(id);
+  
+  const [team, drivers, performance] = await Promise.all([
+    getTeam(teamId),
+    getTeamDrivers(teamId),
+    getTeamYearlyPerformance(teamId),
+  ]);
 
   if (!team) {
     return (
@@ -60,6 +69,11 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="mt-8 space-y-8">
+          <TeamDrivers seasons={drivers} />
+          <TeamPerformance performance={performance} />
         </div>
       </main>
       <Footer text="Constructor legacy detail." />

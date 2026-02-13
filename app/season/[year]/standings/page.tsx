@@ -48,6 +48,7 @@ export default async function SeasonStandingsPage({ params }: { params: Promise<
       wins: standing.wins,
       image_url: driver?.profile_image_url ?? null,
       team_logo_url: team?.logo_url ?? null,
+      driver_id: standing.driver_id,
     };
   });
 
@@ -62,6 +63,7 @@ export default async function SeasonStandingsPage({ params }: { params: Promise<
       wins: standing.wins,
       image_url: null,
       team_logo_url: team?.logo_url ?? null,
+      team_id: standing.team_id,
     };
   });
 

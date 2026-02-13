@@ -1,523 +1,416 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createSupabaseBrowser } from "../../../lib/supabase/client";
-import ImportStatusBanner, { LoadingSkeleton } from "../../../components/ImportStatusBanner";
+import { LoadingSkeleton } from "../../../components/ImportStatusBanner";
 
-const Message = ({ text, type }: { text: string; type: "success" | "error" }) => (
-  <div className={`p-4 rounded-xl mb-4 ${type === "success" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+type MessageType = "success" | "error";
+type Message = { text: string; type: MessageType };
+
+type StreamEvent =
+  | { type: "log"; message: string }
+  | { type: "error"; message: string; details?: string; code?: string }
+  | { type: "complete"; message: string };
+
+const MessageBanner = ({ text, type }: { text: string; type: MessageType }) => (
+  <div
+    className={`mb-4 rounded-xl border p-4 ${
+      type === "success"
+        ? "border-green-500/20 bg-green-500/10 text-green-400"
+        : "border-red-500/20 bg-red-500/10 text-red-400"
+    }`}
+  >
     {text}
   </div>
 );
+
+const ButtonSpinner = () => (
+  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" aria-hidden="true">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.37 0 0 5.37 0 12h4zm2 5.29A7.96 7.96 0 014 12H0c0 3.04 1.13 5.82 3 7.94l3-2.65z"
+    />
+  </svg>
+);
+
+function toErrorText(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return "Request failed";
+}
+
+function normalizeEvent(input: unknown): StreamEvent | null {
+  if (!input || typeof input !== "object") {
+    return null;
+  }
+
+  const event = input as Record<string, unknown>;
+  const type = event.type;
+  const message = event.message;
+
+  if (type === "log" && typeof message === "string") {
+    return { type: "log", message };
+  }
+
+  if (type === "complete" && typeof message === "string") {
+    return { type: "complete", message };
+  }
+
+  if (type === "error" && typeof message === "string") {
+    return {
+      type: "error",
+      message,
+      details: typeof event.details === "string" ? event.details : undefined,
+      code: typeof event.code === "string" ? event.code : undefined,
+    };
+  }
+
+  return null;
+}
+
+async function parseErrorResponse(res: Response): Promise<string> {
+  try {
+    const payload = await res.json();
+    if (payload && typeof payload === "object") {
+      if (typeof payload.error === "string") {
+        return payload.error;
+      }
+
+      if (typeof payload.message === "string") {
+        return payload.message;
+      }
+    }
+  } catch {
+    // Ignore JSON parse errors.
+  }
+
+  return `Request failed (${res.status})`;
+}
+
+async function consumeImportStream(
+  res: Response,
+  onLog: (message: string) => void
+): Promise<{ ok: boolean; message: string }> {
+  if (!res.body) {
+    return { ok: false, message: "No response stream from import API" };
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+
+  let buffer = "";
+  let completedMessage: string | null = null;
+  let errorMessage: string | null = null;
+
+  const processBuffer = () => {
+    let boundary = buffer.indexOf("\n\n");
+
+    while (boundary !== -1) {
+      const eventBlock = buffer.slice(0, boundary).trim();
+      buffer = buffer.slice(boundary + 2);
+
+      const dataLine = eventBlock
+        .split("\n")
+        .map((line) => line.trim())
+        .find((line) => line.startsWith("data: "));
+
+      if (dataLine) {
+        const payload = dataLine.slice(6);
+        try {
+          const event = normalizeEvent(JSON.parse(payload));
+          if (event?.type === "log") {
+            onLog(event.message);
+          }
+
+          if (event?.type === "error") {
+            const details = event.details ? `: ${event.details}` : "";
+            onLog(`${event.message}${details}`);
+            errorMessage = `${event.message}${details}`;
+          }
+
+          if (event?.type === "complete") {
+            onLog(event.message);
+            completedMessage = event.message;
+          }
+        } catch {
+          onLog("Received malformed event payload");
+          errorMessage = "Malformed import event received";
+        }
+      }
+
+      boundary = buffer.indexOf("\n\n");
+    }
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+
+    if (done) {
+      break;
+    }
+
+    buffer += decoder.decode(value, { stream: true });
+    processBuffer();
+  }
+
+  buffer += decoder.decode();
+  processBuffer();
+
+  if (errorMessage) {
+    return { ok: false, message: errorMessage };
+  }
+
+  if (completedMessage) {
+    return { ok: true, message: completedMessage };
+  }
+
+  return { ok: false, message: "Import ended without a completion signal" };
+}
+
+function ProgressLog({ progress }: { progress: string[] }) {
+  if (progress.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="glass-strong max-h-96 overflow-y-auto rounded-xl p-4">
+      <div className="mb-2 text-xs text-white/60">Progress Log</div>
+      <div className="space-y-1 font-mono text-xs">
+        {progress.map((msg, i) => (
+          <div key={`${msg}-${i}`} className="text-white/80">
+            {msg}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function F1ImportPage() {
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createSupabaseBrowser();
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setToken(session?.access_token || null);
     });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setToken(session?.access_token || null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  if (!token) return <LoadingSkeleton />;
+  if (!token) {
+    return <LoadingSkeleton />;
+  }
 
   return (
     <div className="space-y-8">
       <div className="glass rounded-2xl p-8">
-        <h1 className="text-3xl font-bold mb-2">F1 Data Import Tool</h1>
-        <p className="text-white/60">
-          Import historical F1 data using Jolpica API (primary) with Ergast fallback.
-        </p>
-        <div className="mt-4 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-          <p className="text-sm text-yellow-400">
-            ⚠️ Admin Only: Preview data before importing to database.
-          </p>
+        <h1 className="mb-2 text-3xl font-bold">F1 Data Import Tool</h1>
+        <p className="text-white/60">Import historical F1 data from multiple providers.</p>
+        <div className="mt-4 rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4">
+          <p className="text-sm text-yellow-400">Admin only: choose a source and run the import.</p>
+          <a
+            href="/admin/verify-role"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-block text-xs text-yellow-300 underline hover:text-yellow-200"
+          >
+            Debug role endpoint
+          </a>
         </div>
       </div>
 
-      <SeasonImport token={token} />
-      <DriversImport token={token} />
-      <ConstructorsImport token={token} />
+      <F1DBBulkImport token={token} />
+      <ErgastBulkImport token={token} />
     </div>
   );
 }
 
-function SeasonImport({ token }: { token: string }) {
-  const [year, setYear] = useState("");
-  const [preview, setPreview] = useState<any>(null);
+function F1DBBulkImport({ token }: { token: string }) {
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
-
-  const handlePreview = async () => {
-    setLoading(true);
-    setMessage(null);
-    setPreview(null);
-
-    try {
-      const res = await fetch(`/api/f1/import?year=${year}&type=seasons`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const result = await res.json();
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to fetch season");
-      }
-
-      setPreview(result.data);
-      setMessage({ text: "Season Data Found", type: "success" });
-    } catch (error: any) {
-      setMessage({ text: error.message, type: "error" });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [progress, setProgress] = useState<string[]>([]);
+  const [message, setMessage] = useState<Message | null>(null);
 
   const handleImport = async () => {
-    if (!preview) return;
+    if (loading) {
+      return;
+    }
+
     setLoading(true);
+    setProgress([]);
+    setMessage(null);
 
     try {
-      const res = await fetch("/api/f1/import", {
+      const res = await fetch("/api/f1db/bulk-import", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ season: preview, type: "seasons" }),
       });
 
-      const result = await res.json();
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to import season");
+      if (!res.ok) {
+        setMessage({ text: await parseErrorResponse(res), type: "error" });
+        return;
       }
 
-      setMessage({ text: `Season ${preview.year} imported successfully`, type: "success" });
-      setPreview(null);
-      setYear("");
-    } catch (error: any) {
-      setMessage({ text: error.message, type: "error" });
+      const outcome = await consumeImportStream(res, (entry) => {
+        setProgress((prev) => [...prev, entry]);
+      });
+
+      if (outcome.ok) {
+        setMessage({ text: outcome.message, type: "success" });
+      } else {
+        setMessage({ text: outcome.message, type: "error" });
+      }
+    } catch (error) {
+      setMessage({ text: toErrorText(error), type: "error" });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="glass rounded-2xl p-6">
-      <h2 className="text-xl font-bold mb-4">Season Import</h2>
-
-      <div className="flex gap-4 mb-4">
-        <input
-          type="number"
-          placeholder="Year (e.g., 2023)"
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-          min="1950"
-          max={new Date().getFullYear()}
-          className="flex-1 rounded-xl bg-black/60 border border-white/10 px-4 py-3 text-white placeholder:text-white/40"
-          suppressHydrationWarning
-        />
-        <button
-          onClick={handlePreview}
-          disabled={loading || !year}
-          className="px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
-          suppressHydrationWarning
+    <div className="glass rounded-2xl border-2 border-green-500/30 p-6">
+      <h2 className="mb-2 text-2xl font-bold text-green-400">F1DB Import (Recommended)</h2>
+      <p className="mb-4 text-white/60">
+        Import comprehensive F1 data from{" "}
+        <a
+          href="https://github.com/f1db/f1db"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-green-400 underline hover:text-green-300"
         >
-          {loading ? "Loading..." : "Fetch Preview"}
-        </button>
-      </div>
+          F1DB
+        </a>{" "}
+        (CC BY 4.0).
+      </p>
+      <p className="mb-6 text-xs text-white/50">Imports circuits, constructors, drivers, and seasons.</p>
 
-      {message && <Message text={message.text} type={message.type} />}
+      <button
+        onClick={handleImport}
+        disabled={loading}
+        className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border border-green-500/30 bg-green-500/20 px-6 py-4 font-bold text-green-400 hover:bg-green-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {loading && <ButtonSpinner />}
+        {loading ? "Importing..." : "Import F1DB Data"}
+      </button>
 
-      {preview && (
-        <div className="space-y-4">
-          <div className="glass-strong rounded-xl p-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-xs text-white/50 mb-1">Year</div>
-                <div className="text-lg font-bold">{preview.year}</div>
-              </div>
-              <div>
-                <div className="text-xs text-white/50 mb-1">Total Races</div>
-                <div className="text-lg font-bold">{preview.total_races}</div>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleImport}
-            disabled={loading}
-            className="w-full px-6 py-3 rounded-full bg-green-500/20 text-green-400 hover:bg-green-500/30 disabled:opacity-50"
-          >
-            {loading ? "Importing..." : "Import Season"}
-          </button>
-        </div>
-      )}
+      {message && <MessageBanner text={message.text} type={message.type} />}
+      <ProgressLog progress={progress} />
     </div>
   );
 }
 
-function DriversImport({ token }: { token: string }) {
-  const [year, setYear] = useState("");
-  const [preview, setPreview] = useState<any[]>([]);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
+function ErgastBulkImport({ token }: { token: string }) {
+  const [startYear, setStartYear] = useState("2020");
+  const [endYear, setEndYear] = useState("2024");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [progress, setProgress] = useState<string[]>([]);
+  const [message, setMessage] = useState<Message | null>(null);
 
-  const handlePreview = async () => {
+  const handleBulkImport = async () => {
+    if (loading) {
+      return;
+    }
+
+    const start = Number.parseInt(startYear, 10);
+    const end = Number.parseInt(endYear, 10);
+
+    if (Number.isNaN(start) || Number.isNaN(end) || start > end || start < 1950 || end > new Date().getFullYear()) {
+      setMessage({ text: "Invalid year range", type: "error" });
+      return;
+    }
+
     setLoading(true);
+    setProgress([]);
     setMessage(null);
-    setPreview([]);
-    setSelected(new Set());
 
     try {
-      const res = await fetch(`/api/f1/import?year=${year}&type=drivers`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const result = await res.json();
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to fetch drivers");
-      }
-
-      setPreview(result.data);
-      setMessage({ text: `${result.count} Drivers Found`, type: "success" });
-    } catch (error: any) {
-      setMessage({ text: error.message, type: "error" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleImport = async () => {
-    const selectedDrivers = preview.filter((_, i) => selected.has(i));
-    if (selectedDrivers.length === 0) return;
-
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/f1/import", {
+      const res = await fetch("/api/ergast/bulk-import", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ drivers: selectedDrivers, type: "drivers" }),
+        body: JSON.stringify({ startYear: start, endYear: end }),
       });
 
-      const result = await res.json();
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to import drivers");
+      if (!res.ok) {
+        setMessage({ text: await parseErrorResponse(res), type: "error" });
+        return;
       }
 
-      setMessage({ text: `Imported ${result.count} drivers successfully`, type: "success" });
-      setPreview([]);
-      setSelected(new Set());
-      setYear("");
-    } catch (error: any) {
-      setMessage({ text: error.message, type: "error" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleImportAll = async () => {
-    if (preview.length === 0) return;
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/f1/import", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ drivers: preview, type: "drivers" }),
+      const outcome = await consumeImportStream(res, (entry) => {
+        setProgress((prev) => [...prev, entry]);
       });
 
-      const result = await res.json();
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to import drivers");
+      if (outcome.ok) {
+        setMessage({ text: outcome.message, type: "success" });
+      } else {
+        setMessage({ text: outcome.message, type: "error" });
       }
-
-      setMessage({ text: `Imported ${result.count} drivers successfully`, type: "success" });
-      setPreview([]);
-      setSelected(new Set());
-      setYear("");
-    } catch (error: any) {
-      setMessage({ text: error.message, type: "error" });
+    } catch (error) {
+      setMessage({ text: toErrorText(error), type: "error" });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="glass rounded-2xl p-6">
-      <h2 className="text-xl font-bold mb-4">Drivers Import</h2>
+    <div className="glass rounded-2xl border-2 border-f1-red/30 p-6">
+      <h2 className="mb-2 text-2xl font-bold text-f1-red">Ergast API Import</h2>
+      <p className="mb-6 text-white/60">Import data by year range from Ergast API.</p>
 
-      <div className="flex gap-4 mb-4">
-        <input
-          type="number"
-          placeholder="Year (e.g., 2023)"
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-          min="1950"
-          max={new Date().getFullYear()}
-          className="flex-1 rounded-xl bg-black/60 border border-white/10 px-4 py-3 text-white placeholder:text-white/40"
-        />
-        <button
-          onClick={handlePreview}
-          disabled={loading || !year}
-          className="px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? (
-            <span className="flex items-center gap-2">
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Loading...
-            </span>
-          ) : "Fetch Preview"}
-        </button>
+      <div className="mb-4 grid grid-cols-2 gap-4">
+        <div>
+          <label className="mb-2 block text-xs text-white/60">Start Year</label>
+          <input
+            type="number"
+            value={startYear}
+            onChange={(e) => setStartYear(e.target.value)}
+            min="1950"
+            max={new Date().getFullYear()}
+            className="w-full rounded-xl border border-white/10 bg-black/60 px-4 py-3 text-white"
+          />
+        </div>
+        <div>
+          <label className="mb-2 block text-xs text-white/60">End Year</label>
+          <input
+            type="number"
+            value={endYear}
+            onChange={(e) => setEndYear(e.target.value)}
+            min="1950"
+            max={new Date().getFullYear()}
+            className="w-full rounded-xl border border-white/10 bg-black/60 px-4 py-3 text-white"
+          />
+        </div>
       </div>
 
-      {message && <Message text={message.text} type={message.type} />}
+      <button
+        onClick={handleBulkImport}
+        disabled={loading}
+        className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-f1-red px-6 py-4 font-bold text-white hover:bg-f1-red-hover disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {loading && <ButtonSpinner />}
+        {loading ? "Importing..." : `Import Years ${startYear}-${endYear}`}
+      </button>
 
-      {preview.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-white/60">{selected.size} of {preview.length} selected</span>
-            <div className="flex gap-2">
-              <button onClick={() => setSelected(new Set(preview.map((_, i) => i)))} className="text-sm text-white/60 hover:text-white">
-                Select All
-              </button>
-              <button onClick={handleImportAll} disabled={loading} className="text-sm text-green-400 hover:text-green-300 disabled:opacity-50">
-                Import All
-              </button>
-            </div>
-          </div>
-
-          <div className="max-h-96 overflow-y-auto space-y-2">
-            {preview.map((driver, index) => (
-              <label
-                key={index}
-                className="flex items-center gap-3 p-3 rounded-xl glass-strong hover:bg-white/5 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={selected.has(index)}
-                  onChange={() => {
-                    const newSelected = new Set(selected);
-                    if (newSelected.has(index)) newSelected.delete(index);
-                    else newSelected.add(index);
-                    setSelected(newSelected);
-                  }}
-                  className="w-4 h-4 rounded"
-                />
-                <div className="flex-1">
-                  <div className="font-medium">{driver.name}</div>
-                  <div className="text-sm text-white/50">
-                    {driver.nationality} {driver.birthdate && `• Born ${driver.birthdate}`}
-                  </div>
-                </div>
-              </label>
-            ))}
-          </div>
-
-          <button
-            onClick={handleImport}
-            disabled={loading || selected.size === 0}
-            className="w-full px-6 py-3 rounded-full bg-green-500/20 text-green-400 hover:bg-green-500/30 disabled:opacity-50"
-          >
-            {loading ? "Importing..." : `Import ${selected.size} Selected`}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ConstructorsImport({ token }: { token: string }) {
-  const [year, setYear] = useState("");
-  const [preview, setPreview] = useState<any[]>([]);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
-
-  const handlePreview = async () => {
-    setLoading(true);
-    setMessage(null);
-    setPreview([]);
-    setSelected(new Set());
-
-    try {
-      const res = await fetch(`/api/f1/import?year=${year}&type=constructors`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const result = await res.json();
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to fetch constructors");
-      }
-
-      setPreview(result.data);
-      setMessage({ text: `${result.count} Teams Found`, type: "success" });
-    } catch (error: any) {
-      setMessage({ text: error.message, type: "error" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleImport = async () => {
-    const selectedItems = preview.filter((_, i) => selected.has(i));
-    if (selectedItems.length === 0) return;
-
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/f1/import", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ constructors: selectedItems, type: "constructors" }),
-      });
-
-      const result = await res.json();
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to import constructors");
-      }
-
-      setMessage({ text: `Imported ${result.count} teams successfully`, type: "success" });
-      setPreview([]);
-      setSelected(new Set());
-      setYear("");
-    } catch (error: any) {
-      setMessage({ text: error.message, type: "error" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleImportAll = async () => {
-    if (preview.length === 0) return;
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/f1/import", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ constructors: preview, type: "constructors" }),
-      });
-
-      const result = await res.json();
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to import constructors");
-      }
-
-      setMessage({ text: `Imported ${result.count} teams successfully`, type: "success" });
-      setPreview([]);
-      setSelected(new Set());
-      setYear("");
-    } catch (error: any) {
-      setMessage({ text: error.message, type: "error" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="glass rounded-2xl p-6">
-      <h2 className="text-xl font-bold mb-4">Constructors Import</h2>
-
-      <div className="flex gap-4 mb-4">
-        <input
-          type="number"
-          placeholder="Year (e.g., 2023)"
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-          min="1950"
-          max={new Date().getFullYear()}
-          className="flex-1 rounded-xl bg-black/60 border border-white/10 px-4 py-3 text-white placeholder:text-white/40"
-        />
-        <button
-          onClick={handlePreview}
-          disabled={loading || !year}
-          className="px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? (
-            <span className="flex items-center gap-2">
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Loading...
-            </span>
-          ) : "Fetch Preview"}
-        </button>
-      </div>
-
-      {message && <Message text={message.text} type={message.type} />}
-
-      {preview.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-white/60">{selected.size} of {preview.length} selected</span>
-            <div className="flex gap-2">
-              <button onClick={() => setSelected(new Set(preview.map((_, i) => i)))} className="text-sm text-white/60 hover:text-white">
-                Select All
-              </button>
-              <button onClick={handleImportAll} disabled={loading} className="text-sm text-green-400 hover:text-green-300 disabled:opacity-50">
-                Import All
-              </button>
-            </div>
-          </div>
-
-          <div className="max-h-96 overflow-y-auto space-y-2">
-            {preview.map((constructor, index) => (
-              <label
-                key={index}
-                className="flex items-center gap-3 p-3 rounded-xl glass-strong hover:bg-white/5 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={selected.has(index)}
-                  onChange={() => {
-                    const newSelected = new Set(selected);
-                    if (newSelected.has(index)) newSelected.delete(index);
-                    else newSelected.add(index);
-                    setSelected(newSelected);
-                  }}
-                  className="w-4 h-4 rounded"
-                />
-                <div className="flex-1">
-                  <div className="font-medium">{constructor.team_name}</div>
-                  <div className="text-sm text-white/50">{constructor.nationality}</div>
-                </div>
-              </label>
-            ))}
-          </div>
-
-          <button
-            onClick={handleImport}
-            disabled={loading || selected.size === 0}
-            className="w-full px-6 py-3 rounded-full bg-green-500/20 text-green-400 hover:bg-green-500/30 disabled:opacity-50"
-          >
-            {loading ? "Importing..." : `Import ${selected.size} Selected`}
-          </button>
-        </div>
-      )}
+      {message && <MessageBanner text={message.text} type={message.type} />}
+      <ProgressLog progress={progress} />
     </div>
   );
 }
