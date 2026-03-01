@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useDebounce } from "use-debounce";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import clsx from "clsx";
 
 interface SearchResult {
   id: number;
@@ -11,7 +12,17 @@ interface SearchResult {
   subtitle?: string;
 }
 
-export default function GlobalSearch() {
+interface GlobalSearchProps {
+  variant?: "button" | "input";
+  showMobileIcon?: boolean;
+  className?: string;
+}
+
+export default function GlobalSearch({
+  variant = "button",
+  showMobileIcon = true,
+  className,
+}: GlobalSearchProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebounce(query, 300);
@@ -23,7 +34,7 @@ export default function GlobalSearch() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setIsOpen(true);
         setTimeout(() => inputRef.current?.focus(), 100);
@@ -36,7 +47,7 @@ export default function GlobalSearch() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
+  }, []);
 
   useEffect(() => {
     if (!debouncedQuery.trim()) {
@@ -52,8 +63,7 @@ export default function GlobalSearch() {
         const data = await res.json();
         setResults(data.results || []);
         setSelectedIndex(0);
-      } catch (error) {
-        console.error("Search error:", error);
+      } catch {
         setResults([]);
       } finally {
         setLoading(false);
@@ -71,12 +81,18 @@ export default function GlobalSearch() {
 
   const getLink = (result: SearchResult) => {
     switch (result.type) {
-      case "driver": return `/drivers/${result.id}`;
-      case "team": return `/teams/${result.id}`;
-      case "circuit": return `/circuits/${result.id}`;
-      case "season": return `/seasons/${result.id}`;
-      case "timeline": return `/timeline`;
-      default: return "/";
+      case "driver":
+        return `/drivers/${result.id}`;
+      case "team":
+        return `/teams/${result.id}`;
+      case "circuit":
+        return `/circuits/${result.id}`;
+      case "season":
+        return `/seasons/${result.id}`;
+      case "timeline":
+        return "/timeline";
+      default:
+        return "/";
     }
   };
 
@@ -88,7 +104,9 @@ export default function GlobalSearch() {
     timeline: "Timeline",
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleInputKeyDown = (e: React.KeyboardEvent) => {
+    if (!results.length) return;
+
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setSelectedIndex((prev) => (prev + 1) % results.length);
@@ -104,38 +122,62 @@ export default function GlobalSearch() {
     }
   };
 
-  return (
-    <>
-      {/* Desktop Search Button */}
+  const desktopTrigger =
+    variant === "input" ? (
       <button
         onClick={() => setIsOpen(true)}
-        className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-[#111] border border-white/10 text-sm text-white/60 hover:text-white hover:border-white/20 transition-colors"
+        className={clsx(
+          "hidden md:flex h-11 w-full min-w-[260px] max-w-[460px] items-center gap-3 rounded-full border border-white/15 bg-[#111111] px-4 text-left transition-all duration-200 hover:border-f1-red/40 focus:outline-none focus:ring-2 focus:ring-f1-red/50",
+          className
+        )}
+        aria-label="Open global search"
       >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-4 w-4 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <span className="flex-1 truncate text-sm text-white/60">Search drivers, teams, seasons...</span>
+        <span className="rounded-full border border-white/10 bg-black/50 px-2.5 py-1 text-[11px] uppercase tracking-[0.14em] text-white/50">
+          Ctrl/Cmd + K
+        </span>
+      </button>
+    ) : (
+      <button
+        onClick={() => setIsOpen(true)}
+        className={clsx(
+          "hidden md:flex items-center gap-2 rounded-xl border border-white/10 bg-[#111] px-4 py-2 text-sm text-white/60 transition-colors hover:border-white/20 hover:text-white",
+          className
+        )}
+      >
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         <span>Search</span>
-        <kbd className="px-2 py-0.5 text-xs bg-white/10 rounded border border-white/10">⌘K</kbd>
+        <kbd className="rounded border border-white/10 bg-white/10 px-2 py-0.5 text-xs">Ctrl/Cmd + K</kbd>
       </button>
+    );
 
-      {/* Mobile Search Icon */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="md:hidden p-2 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition-colors"
-      >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </button>
+  return (
+    <>
+      {desktopTrigger}
 
-      {/* Search Modal */}
+      {showMobileIcon ? (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="md:hidden rounded-lg p-2 text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+          aria-label="Open global search"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
+      ) : null}
+
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-20 md:pt-32 px-4">
+        <div className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-20 md:pt-28">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
-          <div className="relative w-full max-w-2xl bg-[#0c0c0c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-            {/* Search Input */}
-            <div className="flex items-center gap-3 px-6 py-4 border-b border-white/10">
-              <svg className="w-5 h-5 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c0c] shadow-2xl">
+            <div className="flex items-center gap-3 border-b border-white/10 px-6 py-4">
+              <svg className="h-5 w-5 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
@@ -143,38 +185,35 @@ export default function GlobalSearch() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Search drivers, teams, circuits, seasons..."
+                onKeyDown={handleInputKeyDown}
+                placeholder="Search drivers, teams, seasons..."
                 className="flex-1 bg-transparent text-white placeholder:text-white/40 focus:outline-none"
                 autoFocus
               />
-              <button onClick={() => setIsOpen(false)} className="text-white/50 hover:text-white transition-colors">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <button onClick={() => setIsOpen(false)} className="text-white/50 transition-colors hover:text-white">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            {/* Results */}
             <div className="max-h-[60vh] overflow-y-auto">
-              {loading && (
-                <div className="p-8 text-center text-white/50">Searching...</div>
-              )}
+              {loading ? <div className="p-8 text-center text-white/50">Searching...</div> : null}
 
-              {!loading && query && results.length === 0 && (
+              {!loading && query && results.length === 0 ? (
                 <div className="p-8 text-center">
-                  <div className="text-white/50 mb-2">No results found</div>
+                  <div className="mb-2 text-white/50">No results found</div>
                   <div className="text-sm text-white/30">Try a different search term</div>
                 </div>
-              )}
+              ) : null}
 
-              {!loading && results.length > 0 && (
-                <div className="p-4 space-y-4">
+              {!loading && results.length > 0 ? (
+                <div className="space-y-4 p-4">
                   {Object.entries(groupedResults).map(([type, items]) => (
                     <div key={type}>
-                      <div className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 px-2">{typeLabels[type]}</div>
+                      <div className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-white/50">{typeLabels[type]}</div>
                       <div className="space-y-1">
-                        {items.map((result, idx) => {
+                        {items.map((result) => {
                           const globalIndex = results.indexOf(result);
                           return (
                             <Link
@@ -184,16 +223,12 @@ export default function GlobalSearch() {
                                 setIsOpen(false);
                                 setQuery("");
                               }}
-                              className={`block px-4 py-3 rounded-lg transition-colors ${
-                                globalIndex === selectedIndex
-                                  ? "bg-white/10"
-                                  : "hover:bg-white/5"
+                              className={`block rounded-lg px-4 py-3 transition-colors ${
+                                globalIndex === selectedIndex ? "bg-white/10" : "hover:bg-white/5"
                               }`}
                             >
                               <div className="font-medium text-white">{result.name}</div>
-                              {result.subtitle && (
-                                <div className="text-sm text-white/50 mt-0.5">{result.subtitle}</div>
-                              )}
+                              {result.subtitle ? <div className="mt-0.5 text-sm text-white/50">{result.subtitle}</div> : null}
                             </Link>
                           );
                         })}
@@ -201,27 +236,25 @@ export default function GlobalSearch() {
                     </div>
                   ))}
                 </div>
-              )}
+              ) : null}
             </div>
 
-            {/* Footer Hint */}
-            {!loading && results.length > 0 && (
-              <div className="px-6 py-3 border-t border-white/10 flex items-center gap-4 text-xs text-white/40">
+            {!loading && results.length > 0 ? (
+              <div className="flex items-center gap-4 border-t border-white/10 px-6 py-3 text-xs text-white/40">
                 <div className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10">↑</kbd>
-                  <kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10">↓</kbd>
+                  <kbd className="rounded border border-white/10 bg-white/10 px-1.5 py-0.5">Up/Down</kbd>
                   <span>Navigate</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10">Enter</kbd>
+                  <kbd className="rounded border border-white/10 bg-white/10 px-1.5 py-0.5">Enter</kbd>
                   <span>Select</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10">Esc</kbd>
+                  <kbd className="rounded border border-white/10 bg-white/10 px-1.5 py-0.5">Esc</kbd>
                   <span>Close</span>
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       )}
