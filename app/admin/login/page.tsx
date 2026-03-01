@@ -10,23 +10,32 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { setUser } = useReferenceStore();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setLoading(true);
     setError(null);
+    setSuccess(null);
     const supabase = createSupabaseBrowser();
     const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
     if (authError) {
       setError(authError.message);
+      setLoading(false);
       return;
     }
     if (data.user) {
       const role = getUserRole(data.user) === "admin" ? "admin" : "user";
       setUser({ id: data.user.id, email: data.user.email || "", role });
     }
-    router.push("/admin/dashboard");
+    setSuccess("Login successful. Redirecting...");
+    setTimeout(() => {
+      router.push("/admin/dashboard");
+      router.refresh();
+    }, 500);
   };
 
   return (
@@ -57,12 +66,14 @@ export default function AdminLoginPage() {
             />
           </div>
         </div>
-        {error && <p className="mt-4 text-sm text-f1-red">{error}</p>}
+        {error && <p className="mt-4 text-sm text-f1-red">Login failed: {error}</p>}
+        {success && <p className="mt-4 text-sm text-green-400">{success}</p>}
         <button
           type="submit"
+          disabled={loading}
           className="mt-6 w-full rounded-full border border-f1-cyan/40 py-2 text-xs uppercase tracking-[0.2em] text-f1-cyan"
         >
-          Sign In
+          {loading ? "Signing In..." : "Sign In"}
         </button>
       </form>
     </div>
