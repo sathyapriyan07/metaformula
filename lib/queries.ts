@@ -23,20 +23,23 @@ async function readWithFallback<T>(label: string, readFn: () => Promise<T>, fall
   try {
     return await readFn();
   } catch (error) {
-    const details =
+    const payload =
       error && typeof error === "object"
-        ? JSON.stringify(
-            {
-              message: (error as { message?: string }).message,
-              code: (error as { code?: string }).code,
-              hint: (error as { hint?: string }).hint,
-              details: (error as { details?: string }).details,
-            },
-            null,
-            0
-          )
-        : String(error);
-    console.warn(`[readWithFallback] ${label} -> using fallback`, details);
+        ? {
+            message: (error as { message?: string }).message,
+            code: (error as { code?: string }).code,
+            hint: (error as { hint?: string }).hint,
+            details: (error as { details?: string }).details,
+          }
+        : { message: String(error) };
+
+    const summarized = JSON.stringify(payload);
+    const compact = summarized
+      .replace(/<[^>]+>/g, "")
+      .replace(/\s+/g, " ")
+      .slice(0, 280);
+
+    console.warn(`[readWithFallback] ${label} -> using fallback`, compact);
     return fallback;
   }
 }
