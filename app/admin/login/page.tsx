@@ -6,6 +6,20 @@ import { createSupabaseBrowser } from "../../../lib/supabase/client";
 import { useReferenceStore } from "../../../store/references";
 import { getUserRole } from "../../../lib/roles";
 
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("Request timed out. Please try again.")), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,25 +31,35 @@ export default function AdminLoginPage() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (loading) return;
     setLoading(true);
     setError(null);
     setSuccess(null);
-    const supabase = createSupabaseBrowser();
-    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return;
-    }
-    if (data.user) {
-      const role = getUserRole(data.user) === "admin" ? "admin" : "user";
-      setUser({ id: data.user.id, email: data.user.email || "", role });
-    }
-    setSuccess("Login successful. Redirecting...");
-    setTimeout(() => {
-      router.push("/admin/dashboard");
+    try {
+      const supabase = createSupabaseBrowser();
+      const { data, error: authError } = await withTimeout(
+        supabase.auth.signInWithPassword({ email, password }),
+        15000
+      );
+
+      if (authError) {
+        setError(authError.message);
+        return;
+      }
+
+      if (data.user) {
+        const role = getUserRole(data.user) === "admin" ? "admin" : "user";
+        setUser({ id: data.user.id, email: data.user.email || "", role });
+      }
+      setSuccess("Login successful. Redirecting...");
+      router.replace("/admin/dashboard");
       router.refresh();
-    }, 500);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to sign in. Please try again.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
